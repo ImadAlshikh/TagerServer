@@ -2,10 +2,15 @@ import { type UserType } from "../utils/validator";
 import { type Profile } from "passport-google-oauth20";
 import prisma from "../lib/prisma";
 
-export const createUserService = async (userData: UserType) => {
+export const signinUserService = async (userData: UserType) => {
   const user = await prisma.user.create({
     data: { ...userData, name: userData.name! },
   });
+  return user;
+};
+
+export const loginUserService = async (email: string) => {
+  const user = await prisma.user.findUnique({ where: { email } });
   return user;
 };
 
@@ -32,16 +37,24 @@ export const getAllUsersService = async () => {
 };
 
 export const getUserByIdService = async (userId: string) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-  return user;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    return user;
+  } catch (error) {}
 };
 
 export const getUserProfileService = async (userId: string) => {
   const profile = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, surname: true, picture: true, created_at: true },
+    select: {
+      id: true,
+      name: true,
+      surname: true,
+      picture: true,
+      created_at: true,
+    },
   });
   return profile;
 };

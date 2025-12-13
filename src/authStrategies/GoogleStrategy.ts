@@ -5,6 +5,7 @@ import {
   upsertUserWithGoogleService,
 } from "../services/userService";
 import redis from "../lib/redis";
+import { ja } from "zod/v4/locales";
 
 const googleStrategy: GoogleStrategy = new GoogleStrategy(
   {
@@ -16,29 +17,19 @@ const googleStrategy: GoogleStrategy = new GoogleStrategy(
   async (accessToken, refreshToken, profile, done) => {
     try {
       const user = await upsertUserWithGoogleService(profile);
-      return done(null, user);
+      return done(null, user.id);
     } catch (err) {
       return done(err);
     }
   }
 );
-passport.serializeUser((user, done) => {
-  return done(null, (user as any).id);
+passport.serializeUser((id, done) => {
+  return done(null, id);
 });
 
 passport.deserializeUser(async (userId: string, done) => {
   try {
-    console.log(`${userId} logined`);
-    const cached = await redis.get(`user:${userId}`);
-    if (cached) return done(null, JSON.parse(cached));
-    const user = await getUserByIdService(userId);
-    redis.set(
-      `user:${userId}`,
-      JSON.stringify(user),
-      "EX",
-      process.env.CACHE_TIME!
-    );
-    return done(null, user);
+    return done(null, { id: userId });
   } catch (err) {
     done(err);
   }

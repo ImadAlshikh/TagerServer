@@ -14,28 +14,12 @@ const localStrategy: LocalStrategy = new LocalStrategy(
   },
   async (req, email, password, done) => {
     try {
-      const { name, surname } = req.body;
-      const userData: UserType = { email, password, name, surname };
-      const result = userSchema.safeParse(userData);
-      const hashedPassword = await bcrypt.hash(userData.password!, 10);
-      if (result.success) {
-        const userExists = await prisma.user.findUnique({
-          where: { email: email },
-        });
-        if (!userExists) {
-          return done(null, false);
-        } else if (userExists && !userExists.password) {
-          const user = await prisma.user.update({
-            where: { email: result.data.email },
-            data: { password: hashedPassword! },
-          });
-          return done(null, user.id);
-        } else if (userExists) {
-          return done(null, userExists.id);
-        }
-      } else {
-      }
-      done(null, false);
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+      const isMatch = await bcrypt.compare(password, user?.password!);
+      if (!isMatch) return done(null, false);
+      done(null, user?.id);
     } catch (error) {
       return done(error);
     }

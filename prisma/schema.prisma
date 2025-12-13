@@ -21,11 +21,6 @@ enum PostStatus {
   REMOVED
 }
 
-enum PostType {
-  PRODUCT
-  SERVICE
-}
-
 enum SaleType {
   ONETIME
   MULTIPLE
@@ -52,29 +47,30 @@ model User {
 }
 
 model Post {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  category    String?
-  picture     String?
-  price       Float
-  discount    Int?
-  type        PostType   @default(PRODUCT)
-  saleType    SaleType   @default(ONETIME)
-  stock       Int?
-  status      PostStatus @default(ACTIVE)
-  country     String?
-  address     String?
-  chats       Chat[]
-  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId     String
-  created_at  DateTime   @default(now())
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  picture      String?
+  price        Float
+  discount     Int?
+  saleType     SaleType   @default(ONETIME)
+  stock        Int?
+  status       PostStatus @default(ACTIVE)
+  tags         String[]
+  country      String?
+  address      String?
+  chats        Chat[]
+  owner        User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId      String
+  created_at   DateTime   @default(now())
+  category     Category   @relation(fields: [categoryName], references: [name])
+  categoryName String
 }
 
 model Chat {
   id         String    @id @default(cuid())
   messages   Message[]
-  user       User      @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String
   post       Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId     String
@@ -85,11 +81,19 @@ model Chat {
 
 model Message {
   id         String   @id @default(cuid())
+  isRead     Boolean  @default(false)
   text       String
   sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId   String
-  chat       Chat     @relation(fields: [chatId], references: [id])
+  chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId     String
+  created_at DateTime @default(now())
+}
+
+model Category {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  posts      Post[]
   created_at DateTime @default(now())
 }
 

@@ -24,19 +24,18 @@ export const postStatus = [
   "HIDDING",
   "REMOVED",
 ] as const;
-export const postType = ["PRODUCT", "SERVICE"] as const;
 export const saleType = ["ONETIME", "MULTIPLE"] as const;
 
 export const postSchema = z.object({
   id: z.cuid().optional(),
-  title: z.string().min(5).max(25),
+  title: z.string().nonempty(),
   description: z.string().max(500).optional(),
-  category: z.string().optional(),
   picture: z.string().optional(),
   price: z.number().nonnegative(),
-  discount: z.number().min(1).max(100).optional(),
-  type: z.enum(postType).optional(),
+  discount: z.number().max(100).nonnegative().optional(),
+  categoryName: z.string().nonempty(),
   saleType: z.enum(saleType).optional(),
+  tags: z.string().array().optional(),
   stock: z.number().optional(),
   status: z.enum(postStatus).optional(),
   country: z.string().optional(),
@@ -50,6 +49,7 @@ export const messageSchema = z.object({
   text: z.string(),
   senderId: z.cuid(),
   postId: z.cuid(),
+  chatId: z.cuid(),
 });
 export type MessageType = z.infer<typeof messageSchema>;
 
