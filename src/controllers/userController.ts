@@ -1,122 +1,173 @@
-import { messageSchema, userSchema } from "../utils/validator";
 import { Request, Response } from "express";
+import bcrypt from "bcrypt";
+import streamifier from "streamifier";
+
+import { userSchema } from "../utils/validator";
 import {
   signinUserService,
+  loginUserService,
   getAllUsersService,
   getUserByIdService,
   getUserProfileService,
-  loginUserService,
+  updateProfileService,
 } from "../services/userService";
-import bcrypt from "bcrypt";
-import { string, success, z } from "zod";
+
 import redis from "../lib/redis";
+import cloudinary from "../lib/cloudinary";
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../utils/AppError";
 
-export const signinUserController = async (req: Request, res: Response) => {
-  try {
-    let userDataValid = userSchema.safeParse(req.body);
-    if (!userDataValid.success) {
-      return res.status(400).json({ success: false, message: "Invalid data" });
+export const signinUserController = catchAsync(
+  async (req: Request, res: Response) => {
+    const validation = userSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new AppError("Invalid data", 400);
     }
-    const hashedPassword = await bcrypt.hash(userDataValid.data.password!, 10);
-    userDataValid.data = { ...userDataValid.data, password: hashedPassword };
-    const result = await signinUserService(userDataValid.data);
-    const { password, ...restUserData } = result;
-    req.session.userId = result.id;
-    await redis.set(
-      `user:${result.id}`,
-      JSON.stringify(restUserData),
-      "EX",
-      Number(process.env.CACHE_TIME!)
-    );
-    return res.status(201).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
 
-export const loginUserController = async (req: Request, res: Response) => {
-  try {
+    const hashedPassword = await bcrypt.hash(validation.data.password!, 10);
+
+    const user = await signinUserService({
+      ...validation.data,
+      password: hashedPassword,
+    });
+
+    const { password, ...rest } = user;
+
+    req.session.userId = user.id;
+
+    await redis.set(
+      `user:${user.id}`,
+      JSON.stringify(rest),
+      "EX",
+      Number(process.env.CACHE_TIME)
+    );
+
+    res.status(201).json({ success: true, data: rest });
+  }
+);
+
+export const loginUserController = catchAsync(
+  async (req: Request, res: Response) => {
     const validation = userSchema
       .pick({ email: true, password: true })
-      .required()
       .safeParse(req.body);
+
     if (!validation.success) {
-      return res.status(400).json({ success: false, message: "Invalid input" });
+      throw new AppError("Invalid input", 400);
     }
-    const { email, password } = req.body; //validation.data;
-    const result = await loginUserService(email);
-    if (!result?.password) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
+
+    const { email, password } = validation.data;
+
+    const user = await loginUserService(email);
+    if (!user?.password) {
+      throw new AppError("Invalid email or password", 401);
     }
-    const isMatch = await bcrypt.compare(password, result.password);
+
+    const isMatch = await bcrypt.compare(password!, user.password);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid email or password" });
+      throw new AppError("Invalid email or password", 401);
     }
-    const { password: _, ...restUserData } = result;
-    req.session.userId = result.id;
+
+    const { password: _, ...rest } = user;
+
+    req.session.userId = user.id;
+
     await redis.set(
-      `user:${result.id}`,
-      JSON.stringify(restUserData),
+      `user:${user.id}`,
+      JSON.stringify(rest),
       "EX",
-      Number(process.env.CACHE_TIME!)
+      Number(process.env.CACHE_TIME)
     );
-    return res.status(200).json({ success: true, data: restUserData });
-  } catch (error) {}
-};
 
-export const getAllUsersController = async (req: Request, res: Response) => {
-  try {
-    const result = await getAllUsersService();
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    res.status(200).json({ success: true, data: rest });
   }
-};
+);
 
-export const getUserByIdController = async (req: Request, res: Response) => {
-  try {
-    const userId: string = req.params.id;
-    const result = await getUserByIdService(userId);
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+export const getAllUsersController = catchAsync(
+  async (_req: Request, res: Response) => {
+    const users = await getAllUsersService();
+    res.status(200).json({ success: true, data: users });
   }
-};
+);
 
-export const getUserProfileController = async (req: Request, res: Response) => {
-  try {
-    if (!req.user && !req.session.userId)
-      return res
-        .status(400)
-        .json({ success: false, message: "Session not found" });
+export const getUserByIdController = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    const user = await getUserByIdService(userId);
 
-    const result = await getUserProfileService(
-      req.session.userId || (req.user as any).id
-    );
-    return res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+    if (!user) throw new AppError("User not found", 404);
+
+    res.status(200).json({ success: true, data: user });
   }
-};
+);
 
-export const logoutUser = async (req: Request, res: Response) => {
-  try {
+export const getProfileController = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.session.userId || (req.user as any)?.id;
+
+    const user = await getUserProfileService(userId);
+    res.status(200).json({ success: true, data: user });
+  }
+);
+
+export const updateProfileController = catchAsync(
+  async (req: Request, res: Response) => {
+    const id = req.session.userId || (req.user as any)?.id;
+
+    const { name, surname, phone, address } = req.body;
+
+    let picture;
+
+    if (req.file?.buffer) {
+      const oldUser = await getUserProfileService(id);
+
+      const uploadResult = await new Promise<{
+        secureUrl: string;
+        publicId: string;
+      }>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "users" },
+          (error, result) => {
+            if (error || !result) return reject(error);
+            resolve({
+              secureUrl: result.secure_url,
+              publicId: result.public_id,
+            });
+          }
+        );
+
+        streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
+      });
+
+      picture = uploadResult;
+
+      if (oldUser?.picture?.publicId) {
+        await cloudinary.uploader.destroy(oldUser.picture.publicId);
+      }
+    }
+
+    const user = await updateProfileService({
+      id,
+      name,
+      surname,
+      phone,
+      address,
+      picture,
+    });
+
+    res.json({ success: true, data: user });
+  }
+);
+
+export const logoutController = catchAsync(
+  async (req: Request, res: Response) => {
     req.session.destroy(() => {
       res.clearCookie("connect.sid", {
         httpOnly: true,
-        path: "/",
         sameSite: "lax",
+        path: "/",
       });
+      res.status(200).json({ success: true });
     });
-  } catch (error) {}
-};
+  }
+);

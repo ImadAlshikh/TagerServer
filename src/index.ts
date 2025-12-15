@@ -14,6 +14,7 @@ import passport from "passport";
 import googleStrategy from "./authStrategies/GoogleStrategy";
 import { InitSocket } from "./lib/socket";
 import { attachUser } from "./middlewares/attachUser";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 const server = http.createServer(app);
@@ -60,6 +61,8 @@ app.use("/posts", postRouter);
 app.use("/chats", chatRouter);
 app.use("/ratings", ratingRouter);
 app.use("/reports", reportRouter);
+
+app.use(errorHandler);
 
 server.listen(port, () => {
   console.log(`Express server start on port:${port}`);

@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
 import { MessageType } from "../utils/validator";
+import { AppError } from "../utils/AppError";
 
 export const startChatService = async ({
   userId,
@@ -9,7 +10,7 @@ export const startChatService = async ({
   postId: string;
 }) => {
   const post = await prisma.post.findUnique({ where: { id: postId } });
-  if (!post) throw new Error("Post not found");
+  if (!post) throw new AppError("Post not found", 404);
   if (userId === post.ownerId) {
     const chat = await prisma.chat.findFirst({
       where: { postId },
@@ -84,6 +85,7 @@ export const getChatByIdService = async (chatId: string) => {
           },
         },
       },
+      user: true,
     },
   });
   return chat;

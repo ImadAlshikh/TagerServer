@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { ratingSchema, RatingType } from "../utils/validator";
 import { rateUserService } from "../services/ratingService";
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../utils/AppError";
 
-export const rateUserController = async (req: Request, res: Response) => {
-  try {
+export const rateUserController = catchAsync(
+  async (req: Request, res: Response) => {
     const ratingData: RatingType = {
       ...req.body,
       raterId: (req.user as any).id,
@@ -11,13 +13,9 @@ export const rateUserController = async (req: Request, res: Response) => {
 
     const ratingDataValid = ratingSchema.safeParse(ratingData);
     if (!ratingDataValid.success) {
-      return res.status(401).json({ sucess: false, message: "Invalid data" });
+      throw new AppError("Invalid rating data", 400);
     }
     const rating = await rateUserService(ratingDataValid.data);
     return res.status(200).json({ success: true, data: rating });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
   }
-};
+);

@@ -1,23 +1,20 @@
 import prisma from "../lib/prisma";
+import { AppError } from "../utils/AppError";
 
 export const reportUserService = async (reportData: any) => {
-  try {
-    const isExists = await prisma.report.findFirst({
-      where: {
-        reporterId: reportData.rerporterId,
-        reportedId: reportData.reportedId,
-      },
-    });
-    if (isExists) throw new Error("Report from user is already exists");
-    const report = await prisma.report.create({
-      data: {
-        reporter: { connect: { id: reportData.reporterdId } },
-        reportedId: reportData.reportedId,
-        text: reportData.text,
-      },
-    });
-    return report;
-  } catch (error) {
-    throw new Error("Report failed");
-  }
+  const isExists = await prisma.report.findFirst({
+    where: {
+      reporterId: reportData.rerporterId,
+      reportedId: reportData.reportedId,
+    },
+  });
+  if (isExists) throw new AppError("Report from this user already exists", 409);
+  const report = await prisma.report.create({
+    data: {
+      reporter: { connect: { id: reportData.reporterdId } },
+      reportedId: reportData.reportedId,
+      text: reportData.text,
+    },
+  });
+  return report;
 };

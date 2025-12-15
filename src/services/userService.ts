@@ -2,7 +2,9 @@ import { type UserType } from "../utils/validator";
 import { type Profile } from "passport-google-oauth20";
 import prisma from "../lib/prisma";
 
-export const signinUserService = async (userData: UserType) => {
+export const signinUserService = async (
+  userData: Omit<UserType, "picture">
+) => {
   const user = await prisma.user.create({
     data: { ...userData, name: userData.name! },
   });
@@ -10,7 +12,10 @@ export const signinUserService = async (userData: UserType) => {
 };
 
 export const loginUserService = async (email: string) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { picture: { select: { secureUrl: true } } },
+  });
   return user;
 };
 
@@ -24,9 +29,10 @@ export const upsertUserWithGoogleService = async (userData: Profile) => {
       name: userData._json.given_name!,
       surname: userData._json.family_name,
       email: userData._json.email!,
-      picture: userData._json.picture,
+      picture: { create: { secureUrl: userData._json.picture! } },
       googleId: userData.id,
     },
+    include: { picture: { select: { secureUrl: true } } },
   });
   return user;
 };
@@ -57,4 +63,41 @@ export const getUserProfileService = async (userId: string) => {
     },
   });
   return profile;
+};
+
+export const updateProfileService = async ({
+  id,
+  name,
+  surname,
+  picture,
+  phone,
+  address,
+}: {
+  id: string;
+  name: string;
+  surname?: string;
+  picture?: { secureUrl: string; publicId: string };
+  phone?: string;
+  address?: string;
+}) => {
+  const user = await prisma.user.update({
+    where: { id: id },
+    data: {
+      name,
+      surname,
+      phone,
+      address,
+      ...(picture?.secureUrl
+        ? {
+            picture: {
+              create: {
+                secureUrl: picture.secureUrl,
+                publicId: picture.publicId,
+              },
+            },
+          }
+        : {}),
+    },
+  });
+  return user;
 };

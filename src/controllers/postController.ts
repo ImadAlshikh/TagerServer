@@ -7,118 +7,103 @@ import {
   editPostByIdService,
   searchPostService,
 } from "../services/postService";
+
 import { postSchema, PostType } from "../utils/validator";
 import cloudinary from "../lib/cloudinary";
 import streamifier from "streamifier";
+import { catchAsync } from "../utils/catchAsync";
+import { AppError } from "../utils/AppError";
 
-export const createPostController = async (req: Request, res: Response) => {
-  try {
-    let imageUrl;
+export const createPostController = catchAsync(
+  async (req: Request, res: Response) => {
     const postData: PostType = {
       ...req.body,
       price: Number(req.body.price),
       discount: Number(req.body?.discount),
       ownerId: (req.user as any).id,
-      tags: req.body.tags.split(" "),
+      tags: req.body.tags?.split(" ") || [],
     };
-    const postDataValid = postSchema.safeParse(postData);
-    if (!postDataValid.success) {
-      return res
-        .status(400)
-        .json({ success: false, message: postDataValid.error.issues });
+
+    const validation = postSchema.safeParse(postData);
+    if (!validation.success) {
+      throw new AppError("Invalid post data", 400);
     }
-    if (req.file) {
-      imageUrl = await new Promise<string>((resolve, reject) => {
-        const uploadSteram = cloudinary.uploader.upload_stream(
-          {
-            folder: "posts",
-          },
+
+    let picture: string | undefined;
+
+    if (req.file?.buffer) {
+      picture = await new Promise<string>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "posts" },
           (error, result) => {
-            if (error) return reject(error);
-            resolve(result!.secure_url);
+            if (error || !result) return reject(error);
+            resolve(result.secure_url);
           }
         );
-        streamifier.createReadStream(req.file!.buffer).pipe(uploadSteram);
+
+        streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
       });
     }
-    const result = await createPostService({ ...postData, picture: imageUrl });
-    return res.status(201).json({
+
+    const result = await createPostService({
+      ...postData,
+      picture,
+    });
+
+    res.status(201).json({
       success: true,
       data: result,
       message: "Post created successfully",
     });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
   }
-};
+);
 
-export const getAllPostsController = async (req: Request, res: Response) => {
-  try {
+export const getAllPostsController = catchAsync(
+  async (_req: Request, res: Response) => {
     const result = await getAllPostsService();
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    res.status(200).json({ success: true, data: result });
   }
-};
+);
 
-export const getPostByIdController = async (req: Request, res: Response) => {
-  try {
+export const getPostByIdController = catchAsync(
+  async (req: Request, res: Response) => {
     const postId = req.params.id;
     const result = await getPostByIdService(postId);
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
 
-export const getPostsByUserIdController = async (
-  req: Request,
-  res: Response
-) => {
-  try {
+    if (!result) throw new AppError("Post not found", 404);
+
+    res.status(200).json({ success: true, data: result });
+  }
+);
+
+export const getPostsByUserIdController = catchAsync(
+  async (req: Request, res: Response) => {
     const userId = req.params.userId;
     const result = await getPostsByUserIdService(userId);
-    return res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    res.status(200).json({ success: true, data: result });
   }
-};
+);
 
-export const editPostByIdController = async (req: Request, res: Response) => {
-  try {
+export const editPostByIdController = catchAsync(
+  async (req: Request, res: Response) => {
     const postData: PostType = req.body;
-    const postDataValid = postSchema.safeParse(postData);
-    if (1 > 2 && !postDataValid.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid data",
-        error: postDataValid.error,
-      });
-    }
-    const result = await editPostByIdService(postData);
-    return res.status(201).json({ success: true, data: result });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
-  }
-};
 
-export const searchPostController = async (req: Request, res: Response) => {
-  try {
-    const { query } = req.body;
-    
-    const result = await searchPostService(query);
-    if (result) {
-      return res.status(200).json({ success: true, data: result });
+    const validation = postSchema.safeParse(postData);
+    if (!validation.success) {
+      throw new AppError("Invalid post data", 400);
     }
-  } catch (error: any) {
-    return res.status(500).json({ success: true, message: error.message });
+
+    const result = await editPostByIdService(postData);
+    res.status(200).json({ success: true, data: result });
   }
-};
+);
+
+export const searchPostController = catchAsync(
+  async (req: Request, res: Response) => {
+    const { query } = req.body;
+    if (!query) throw new AppError("Query is required", 400);
+
+    const result = await searchPostService(query);
+    res.status(200).json({ success: true, data: result });
+  }
+);

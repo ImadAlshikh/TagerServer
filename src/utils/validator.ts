@@ -10,7 +10,8 @@ export const userSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).optional(),
   phone: z.string().optional(),
-  picture: z.string().optional(),
+  pictureId: z.string().optional(),
+  picture: z.object({ secureUrl: z.string(), publicId: z.string() }).optional(),
   role: z.enum(userRoles).optional(),
   country: z.string().optional(),
 });

@@ -1,36 +1,31 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../lib/prisma";
 import { type userRoles } from "../utils/validator";
+import { AppError } from "../utils/AppError";
 
 type Role = (typeof userRoles)[number];
 type RoleOrRoles = Role | Role[];
 
 export const checkPermissions = (allowRoles?: RoleOrRoles) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-    const userId = (req.user as any).id;
     try {
+      if (!req.isAuthenticated()) {
+        throw new AppError("Unauthorized", 401);
+      }
+      const userId = (req.user as any).id;
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { role: true },
       });
       if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
+        throw new AppError("Unauthorized", 401);
       }
       if (allowRoles?.length && !allowRoles?.includes(user!.role)) {
-        return res.status(401).json({ message: "Permission not allowed" });
+        throw new AppError("Permission not allowed", 403);
       }
       next();
     } catch (error) {
-      return res.status(500).json({ success: false, message: "Server error" });
+      next(error);
     }
   };
 };

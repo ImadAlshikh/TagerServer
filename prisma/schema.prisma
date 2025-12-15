@@ -34,10 +34,11 @@ model User {
   email          String    @unique
   password       String?
   phone          String?
-  picture        String?
+  pictureId      String?   @unique
+  picture        Image?    @relation(fields: [pictureId], references: [id])
   role           UserRoles @default(USER)
   posts          Post[]
-  country        String?
+  address        String?
   ratingsGiven   Rating[]  @relation("rater_user")
   ratingsRecived Rating[]  @relation("rated_user")
   chats          Chat[]
@@ -88,6 +89,13 @@ model Message {
   chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId     String
   created_at DateTime @default(now())
+}
+
+model Image {
+  id        String @id @default(cuid())
+  publicId  String?
+  secureUrl String
+  user      User?
 }
 
 model Category {
