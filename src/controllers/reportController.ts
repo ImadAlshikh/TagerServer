@@ -5,7 +5,12 @@ import { catchAsync } from "../utils/catchAsync";
 export const reportUserController = catchAsync(
   async (req: Request, res: Response) => {
     const reportData = req.body;
-    const result = await reportUserService(reportData);
+    const userId = req.session.userId || (req.user as any).id;
+
+    const result = await reportUserService({
+      ...reportData,
+      reporterId: userId,
+    });
     res.status(201).json({ success: true, data: result });
   }
 );

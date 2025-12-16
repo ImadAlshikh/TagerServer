@@ -7,6 +7,7 @@ export const createPostService = async (postData: PostType) => {
   const post = await prisma.post.create({
     data: {
       ...restPostData,
+      tags: restPostData.tags?.length ? restPostData.tags : [],
       owner: { connect: { id: ownerId } },
       category: {
         connectOrCreate: {
@@ -20,13 +21,49 @@ export const createPostService = async (postData: PostType) => {
   return post;
 };
 
-export const getAllPostsService = async () => {
+export const getAllPostsService = async ({
+  cursorId,
+  limit = 20,
+}: {
+  cursorId?: string;
+  limit?: number;
+}) => {
   const posts = await prisma.post.findMany({
+    take: limit + 1,
+
+    ...(cursorId
+      ? {
+          cursor: { id: cursorId },
+          skip: 1,
+        }
+      : {}),
+
+    orderBy: {
+      created_at: "desc",
+    },
+
     include: {
-      owner: { select: { name: true, picture: true, surname: true } },
+      owner: {
+        select: {
+          name: true,
+          surname: true,
+          picture: true,
+        },
+      },
     },
   });
-  return posts;
+
+  let nextCursor: string | null = null;
+
+  if (posts.length > limit) {
+    const nextItem = posts.pop();
+    nextCursor = nextItem!.id;
+  }
+
+  return {
+    posts,
+    nextCursor,
+  };
 };
 
 export const getPostByIdService = async (postId: string) => {

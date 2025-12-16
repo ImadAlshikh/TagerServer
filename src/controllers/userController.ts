@@ -115,7 +115,21 @@ export const updateProfileController = catchAsync(
     const id = req.session.userId || (req.user as any)?.id;
 
     const { name, surname, phone, address } = req.body;
-
+    const partialUserSchema = userSchema.pick({
+      name: true,
+      surname: true,
+      phone: true,
+      address: true,
+    });
+    const dataValid = partialUserSchema.safeParse({
+      name,
+      surname,
+      phone,
+      address,
+    });
+    if (!dataValid.success) {
+      throw new AppError("Invalid data", 401);
+    }
     let picture;
 
     if (req.file?.buffer) {

@@ -59,8 +59,9 @@ export const createPostController = catchAsync(
 );
 
 export const getAllPostsController = catchAsync(
-  async (_req: Request, res: Response) => {
-    const result = await getAllPostsService();
+  async (req: Request, res: Response) => {
+    const { cursorId, limit } = req.body;
+    const result = await getAllPostsService({cursorId, limit});
     res.status(200).json({ success: true, data: result });
   }
 );

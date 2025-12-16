@@ -13,7 +13,7 @@ export const userSchema = z.object({
   pictureId: z.string().optional(),
   picture: z.object({ secureUrl: z.string(), publicId: z.string() }).optional(),
   role: z.enum(userRoles).optional(),
-  country: z.string().optional(),
+  address: z.string().optional(),
 });
 export type UserType = z.infer<typeof userSchema>;
 

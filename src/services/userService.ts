@@ -59,6 +59,8 @@ export const getUserProfileService = async (userId: string) => {
       name: true,
       surname: true,
       picture: true,
+      phone: true,
+      address: true,
       created_at: true,
     },
   });

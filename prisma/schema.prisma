@@ -31,6 +31,7 @@ model User {
   googleId       String?   @unique
   name           String
   surname        String?
+  bio            String?
   email          String    @unique
   password       String?
   phone          String?
@@ -44,7 +45,6 @@ model User {
   chats          Chat[]
   messages       Message[]
   created_at     DateTime  @default(now())
-  reports        Report[]  @relation("report")
 }
 
 model Post {
@@ -52,7 +52,7 @@ model Post {
   title        String
   description  String?
   picture      String?
-  price        Float
+  price        Int //in cents
   discount     Int?
   saleType     SaleType   @default(ONETIME)
   stock        Int?
@@ -92,7 +92,7 @@ model Message {
 }
 
 model Image {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   publicId  String?
   secureUrl String
   user      User?
@@ -120,8 +120,10 @@ model Rating {
 model Report {
   id         String   @id @default(cuid())
   reporterId String
-  reporter   User     @relation(name: "report", fields: [reporterId], references: [id], onDelete: Cascade)
   reportedId String
   text       String?
   created_at DateTime @default(now())
+  userId     String?
+
+  @@unique([reporterId, reportedId])
 }

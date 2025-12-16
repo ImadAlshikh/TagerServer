@@ -81,11 +81,23 @@ export const getChatByIdService = async (chatId: string) => {
         select: {
           id: true,
           owner: {
-            select: { id: true, name: true, surname: true, picture: true },
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+              picture: { select: { secureUrl: true } },
+            },
           },
         },
       },
-      user: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          surname: true,
+          picture: { select: { secureUrl: true } },
+        },
+      },
     },
   });
   return chat;
@@ -112,13 +124,13 @@ export const getChatsByUserService = async (userId: string) => {
         select: { senderId: true, text: true, created_at: true },
       },
     },
+    orderBy: { created_at: "desc" },
   });
 
   const lastMessages = await Promise.all(
     chats.map((chat) =>
       prisma.message.findFirst({
         where: { chatId: chat.id },
-        orderBy: { created_at: "desc" },
         select: {
           senderId: true,
           chatId: true,
