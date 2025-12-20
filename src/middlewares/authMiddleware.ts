@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 
 export const isAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.session.userId && !(req.user as any).id) {
+  if (!req.session.userId && !(req.user as any)?.id) {
     return next(new AppError("Unauthorized", 401));
   }
   next();

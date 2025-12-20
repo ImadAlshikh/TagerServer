@@ -8,9 +8,12 @@ export function InitSocket(server: any) {
     socket.on("join-chat", async ({ chatId, userId }) => {
       socket.join(chatId);
       await prisma.message.updateMany({
-        where: { chatId, senderId: { not: userId }, isRead: false },
+        where: { chatId, NOT: { senderId: userId }, isRead: false },
         data: { isRead: true },
       });
+    });
+    socket.on("leave-chat", (chatId) => {
+      socket.leave(chatId);
     });
   });
   return io;

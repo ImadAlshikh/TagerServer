@@ -22,26 +22,19 @@ export const createPostService = async (postData: PostType) => {
 };
 
 export const getAllPostsService = async ({
-  cursorId,
-  limit = 20,
+  cursor,
+  limit,
 }: {
-  cursorId?: string;
-  limit?: number;
+  cursor?: string;
+  limit?: number | string;
 }) => {
+  const postsCount = await prisma.post.count();
   const posts = await prisma.post.findMany({
-    take: limit + 1,
-
-    ...(cursorId
-      ? {
-          cursor: { id: cursorId },
-          skip: 1,
-        }
-      : {}),
-
+    ...(cursor ? { where: { created_at: { lt: cursor } } } : {}),
+    ...(limit ? { take: Number(limit) } : {}),
     orderBy: {
       created_at: "desc",
     },
-
     include: {
       owner: {
         select: {
@@ -52,18 +45,7 @@ export const getAllPostsService = async ({
       },
     },
   });
-
-  let nextCursor: string | null = null;
-
-  if (posts.length > limit) {
-    const nextItem = posts.pop();
-    nextCursor = nextItem!.id;
-  }
-
-  return {
-    posts,
-    nextCursor,
-  };
+  return { posts, postsCount };
 };
 
 export const getPostByIdService = async (postId: string) => {

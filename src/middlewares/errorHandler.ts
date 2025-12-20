@@ -7,13 +7,13 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  console.error("Error:", err.message, err.stack);
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
       message: err.message,
     });
   }
-  console.error("Error:", err.message);
   return res.status(500).json({
     success: false,
     message: "Internal server error",

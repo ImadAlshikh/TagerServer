@@ -60,9 +60,16 @@ export const createPostController = catchAsync(
 
 export const getAllPostsController = catchAsync(
   async (req: Request, res: Response) => {
-    const { cursorId, limit } = req.body;
-    const result = await getAllPostsService({cursorId, limit});
-    res.status(200).json({ success: true, data: result });
+    try {
+      let { cursor, limit } = req.query as {
+        cursor?: string;
+        limit?: string;
+      };
+      limit === "undefined" ? (limit = undefined) : limit;
+      cursor === "undefined" ? (cursor = undefined) : cursor;
+      const result = await getAllPostsService({ cursor, limit });
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {}
   }
 );
 
@@ -101,10 +108,10 @@ export const editPostByIdController = catchAsync(
 
 export const searchPostController = catchAsync(
   async (req: Request, res: Response) => {
-    const { query } = req.body;
-    if (!query) throw new AppError("Query is required", 400);
+    const { query } = req.query;
 
-    const result = await searchPostService(query);
+    if (!query) throw new AppError("Query is required", 400);
+    const result = await searchPostService(query.toString().split(","));
     res.status(200).json({ success: true, data: result });
   }
 );

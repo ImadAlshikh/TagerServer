@@ -120,7 +120,7 @@ export const getChatsByUserService = async (userId: string) => {
         select: { id: true, name: true, surname: true, picture: true },
       },
       messages: {
-        where: { isRead: false },
+        where: { isRead: false, NOT: { senderId: userId } },
         select: { senderId: true, text: true, created_at: true },
       },
     },
@@ -137,6 +137,7 @@ export const getChatsByUserService = async (userId: string) => {
           created_at: true,
           text: true,
         },
+        orderBy: { created_at: "desc" },
       })
     )
   );

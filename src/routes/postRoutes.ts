@@ -17,8 +17,8 @@ const upload = multer();
 router.post("/", isAuth, upload.single("picture"), createPostController);
 router.get("/", getAllPostsController);
 router.put("/", isAuth, checkPermissions(["ADMIN"]), editPostByIdController);
+router.get("/search", searchPostController);
 router.get("/by-user/:id", getPostsByUserIdController);
 router.get("/:id", getPostByIdController);
-router.post("/search", searchPostController);
 
 export default router;
