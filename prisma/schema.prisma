@@ -44,6 +44,7 @@ model User {
   ratingsRecived Rating[]  @relation("rated_user")
   chats          Chat[]
   messages       Message[]
+  wallet         Wallet?
   created_at     DateTime  @default(now())
 }
 
@@ -126,4 +127,36 @@ model Report {
   userId     String?
 
   @@unique([reporterId, reportedId])
+}
+
+model Wallet {
+  id         String      @id @default(cuid())
+  userId     String      @unique
+  user       User        @relation(fields: [userId], references: [id])
+  freePoints Int         @default(30)
+  paidPoints Int         @default(0)
+  logs       WalletLog[]
+  updatedAt  DateTime    @updatedAt
+}
+
+model WalletLog {
+  id          String          @id @default(cuid())
+  wallet      Wallet          @relation(fields: [walletId], references: [id])
+  walletId    String
+  amount      Int
+  pointSource PointSource
+  reason      WalletLogReason
+  created_at  DateTime        @default(now())
+}
+
+enum WalletLogReason {
+  MONTHLY_RESET
+  TOP_UP
+  POST_CREATE
+  POST_PROMOTE
+}
+
+enum PointSource {
+  FREE
+  PAID
 }

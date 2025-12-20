@@ -21,17 +21,19 @@ export const createPostService = async (postData: PostType) => {
   return post;
 };
 
-export const getAllPostsService = async ({
-  cursor,
-  limit,
-}: {
-  cursor?: string;
-  limit?: number | string;
-}) => {
+export const getAllPostsService = async (
+  {
+    cursor,
+    limit,
+  }: {
+    cursor?: string;
+    limit?: number | string;
+  } = { limit: 10 }
+) => {
   const postsCount = await prisma.post.count();
   const posts = await prisma.post.findMany({
     ...(cursor ? { where: { created_at: { lt: cursor } } } : {}),
-    ...(limit ? { take: Number(limit) } : {}),
+    ...(limit ? (limit != -1 ? { take: Number(limit) } : {}) : {}),
     orderBy: {
       created_at: "desc",
     },
