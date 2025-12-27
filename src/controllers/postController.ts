@@ -29,20 +29,25 @@ export const createPostController = catchAsync(
       throw new AppError("Invalid post data", 400);
     }
 
-    let picture: string | undefined;
+    let picture: { secure_url: string; public_id: string } | undefined;
 
     if (req.file?.buffer) {
-      picture = await new Promise<string>((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "posts" },
-          (error, result) => {
-            if (error || !result) return reject(error);
-            resolve(result.secure_url);
-          }
-        );
+      picture = await new Promise<{ secure_url: string; public_id: string }>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "posts",
+              transformation: { width: 400, height: 400, crop: "fill" },
+            },
+            (error, result) => {
+              if (error || !result) return reject(error);
+              resolve(result);
+            }
+          );
 
-        streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
-      });
+          streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
+        }
+      );
     }
 
     const result = await createPostService({

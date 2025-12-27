@@ -175,7 +175,10 @@ export const updateProfileController = catchAsync(
 
 export const logoutController = catchAsync(
   async (req: Request, res: Response) => {
-    req.session.destroy(() => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ success: false });
+      }
       res.clearCookie("connect.sid", {
         httpOnly: true,
         sameSite: "lax",

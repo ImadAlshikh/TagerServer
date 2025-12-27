@@ -6,6 +6,7 @@ import {
   getProfileController,
   loginUserController,
   updateProfileController,
+  logoutController
 } from "../controllers/userController";
 import { isAuth } from "../middlewares/authMiddleware";
 import multer from "multer";
@@ -24,6 +25,6 @@ router.put(
   updateProfileController
 );
 router.get("/:id", getUserByIdController);
-// router.delete("/logout", isAuth, logoutUser);
+router.delete("/logout", isAuth, logoutController);
 
 export default router;

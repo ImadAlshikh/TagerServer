@@ -1,24 +1,52 @@
 import { type PostType } from "../utils/validator";
 import prisma from "../lib/prisma";
+import { AppError } from "../utils/AppError";
 
 export const createPostService = async (postData: PostType) => {
-  const { ownerId, categoryName, ...restPostData } = postData;
+  const { ownerId, categoryName, picture, ...restPostData } = postData;
 
-  const post = await prisma.post.create({
-    data: {
-      ...restPostData,
-      tags: restPostData.tags?.length ? restPostData.tags : [],
-      owner: { connect: { id: ownerId } },
-      category: {
-        connectOrCreate: {
-          where: { name: categoryName.toLocaleLowerCase() },
-          create: { name: categoryName },
+  const trans = await prisma.$transaction(async (tx) => {
+    const cost = Number(process.env.POST_CREATE_COST) || 5;
+    const wallet = await tx.wallet.upsert({
+      where: { userId: ownerId },
+      create: { user: { connect: { id: ownerId } } },
+      update: {},
+    });
+    if (wallet.freePoints < cost) {
+      throw new AppError("Your wallet balance is insufficient", 402);
+    }
+    const post = await tx.post.create({
+      data: {
+        ...restPostData,
+        tags: restPostData.tags?.length ? restPostData.tags : [],
+        owner: { connect: { id: ownerId } },
+        picture: {
+          create: {
+            secureUrl: picture.secure_url,
+            publicId: picture.public_id,
+          },
+        },
+        category: {
+          connectOrCreate: {
+            where: { name: categoryName.toLocaleLowerCase() },
+            create: { name: categoryName },
+          },
         },
       },
-    },
+    });
+    await tx.wallet.update({
+      where: { id: wallet.id },
+      data: {
+        freePoints: { decrement: 5 },
+        logs: {
+          create: { amount: -5, pointSource: "FREE", reason: "POST_CREATE" },
+        },
+      },
+    });
+    return { post };
   });
 
-  return post;
+  return trans.post;
 };
 
 export const getAllPostsService = async (
@@ -38,6 +66,7 @@ export const getAllPostsService = async (
       created_at: "desc",
     },
     include: {
+      picture: { select: { secureUrl: true } },
       owner: {
         select: {
           name: true,
@@ -54,6 +83,7 @@ export const getPostByIdService = async (postId: string) => {
   const post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
+      picture: { select: { secureUrl: true, publicId: true } },
       owner: { select: { name: true, picture: true, surname: true } },
     },
   });

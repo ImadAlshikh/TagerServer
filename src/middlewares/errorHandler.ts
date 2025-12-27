@@ -11,11 +11,11 @@ export const errorHandler = (
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
-      message: err.message,
+      error: err.message,
     });
   }
   return res.status(500).json({
     success: false,
-    message: "Internal server error",
+    error: "Internal server error",
   });
 };

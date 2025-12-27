@@ -1,14 +1,27 @@
 import { type UserType } from "../utils/validator";
 import { type Profile } from "passport-google-oauth20";
 import prisma from "../lib/prisma";
+import { mapPrismaError } from "../utils/PrismaErrorMapper";
 
 export const signinUserService = async (
   userData: Omit<UserType, "picture">
 ) => {
-  const user = await prisma.user.create({
-    data: { ...userData, name: userData.name! },
-  });
-  return user;
+  try {
+    const trans = await prisma.$transaction(async (tx) => {
+      const user = await prisma.user.create({
+        data: { ...userData, name: userData.name!.trim() },
+      });
+      const wallet = await tx.wallet.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id },
+        update: {},
+      });
+      return { user };
+    });
+    return trans.user;
+  } catch (error) {
+    mapPrismaError(error);
+  }
 };
 
 export const loginUserService = async (email: string) => {
@@ -20,21 +33,32 @@ export const loginUserService = async (email: string) => {
 };
 
 export const upsertUserWithGoogleService = async (userData: Profile) => {
-  const user = await prisma.user.upsert({
-    where: { email: userData._json.email },
-    update: {
-      googleId: userData.id,
-    },
-    create: {
-      name: userData._json.given_name!,
-      surname: userData._json.family_name,
-      email: userData._json.email!,
-      picture: { create: { secureUrl: userData._json.picture! } },
-      googleId: userData.id,
-    },
-    include: { picture: { select: { secureUrl: true } } },
+  const trans = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.upsert({
+      where: { email: userData._json.email },
+      update: {
+        googleId: userData.id,
+      },
+      create: {
+        name: userData._json.given_name!,
+        surname: userData._json.family_name,
+        email: userData._json.email!,
+        picture: { create: { secureUrl: userData._json.picture! } },
+        googleId: userData.id,
+      },
+      include: { picture: { select: { secureUrl: true } } },
+    });
+
+    const wallet = await tx.wallet.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id },
+      update: {},
+    });
+
+    return { user };
   });
-  return user;
+
+  return trans.user;
 };
 
 export const getAllUsersService = async () => {
@@ -59,6 +83,22 @@ export const getUserProfileService = async (userId: string) => {
       name: true,
       surname: true,
       picture: true,
+      posts: {
+        take: 2,
+        include: {
+          owner: {
+            select: {
+              name: true,
+              surname: true,
+              picture: true,
+            },
+          },
+        },
+        orderBy: { created_at: "desc" },
+      },
+      wallet: {
+        select: { freePoints: true, paidPoints: true },
+      },
       phone: true,
       address: true,
       created_at: true,
@@ -85,10 +125,10 @@ export const updateProfileService = async ({
   const user = await prisma.user.update({
     where: { id: id },
     data: {
-      name,
-      surname,
-      phone,
-      address,
+      name: name.trim(),
+      surname: surname?.trim(),
+      phone: phone?.trim(),
+      address: address?.trim(),
       ...(picture?.secureUrl
         ? {
             picture: {

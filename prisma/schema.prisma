@@ -52,7 +52,8 @@ model Post {
   id           String     @id @default(cuid())
   title        String
   description  String?
-  picture      String?
+  pictureId    String?    @unique
+  picture      Image?     @relation(fields: [pictureId], references: [id])
   price        Int //in cents
   discount     Int?
   saleType     SaleType   @default(ONETIME)
@@ -97,6 +98,7 @@ model Image {
   publicId  String?
   secureUrl String
   user      User?
+  post      Post?
 }
 
 model Category {

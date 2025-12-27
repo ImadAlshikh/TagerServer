@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.post("/", isAuth, startChatController);
 router.post("/send", isAuth, sendMessageController);
+router.get("/by-user", isAuth, getChatsByUserController);
 router.get("/:id", isAuth, checkPermissions(), getChatByIdConroller);
-router.get("/by-user/:id", isAuth, getChatsByUserController);
 
 export default router;
