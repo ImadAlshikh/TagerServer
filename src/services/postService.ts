@@ -20,12 +20,17 @@ export const createPostService = async (postData: PostType) => {
         ...restPostData,
         tags: restPostData.tags?.length ? restPostData.tags : [],
         owner: { connect: { id: ownerId } },
-        picture: {
-          create: {
-            secureUrl: picture.secure_url,
-            publicId: picture.public_id,
-          },
-        },
+        ...(picture?.secure_url
+          ? {
+              picture: {
+                create: {
+                  secureUrl: picture.secure_url,
+                  publicId: picture.public_id,
+                },
+              },
+            }
+          : {}),
+
         category: {
           connectOrCreate: {
             where: { name: categoryName.toLocaleLowerCase() },
