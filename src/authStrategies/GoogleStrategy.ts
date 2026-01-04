@@ -1,11 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import {
-  getUserByIdService,
-  upsertUserWithGoogleService,
-} from "../services/userService";
-import redis from "../lib/redis";
-import { ja } from "zod/v4/locales";
+import { upsertUserWithGoogleService } from "../services/userService";
 
 const googleStrategy: GoogleStrategy = new GoogleStrategy(
   {

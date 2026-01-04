@@ -23,5 +23,5 @@ export function mapPrismaError(err: unknown): never {
     }
   }
 
-  throw new AppError("Internal server error", 500);
+  throw new AppError(`Internal server error:${err}`, 500);
 }
