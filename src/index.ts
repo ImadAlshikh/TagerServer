@@ -19,7 +19,12 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 const app = express();
 const server = http.createServer(app);
 export const io = InitSocket(server);
-
+console.log(
+  "env:",
+  process.env.NODE_ENV,
+  "frontEnd:",
+  process.env.FRONTEND_URL
+);
 const port = Number(process.env.PORT);
 const sessionMaxAge: number = 1000 * 60 * 60 * 24;
 app.use(express.json());
