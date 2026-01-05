@@ -23,7 +23,28 @@ export const io = InitSocket(server);
 const port = Number(process.env.PORT);
 const sessionMaxAge: number = 1000 * 60 * 60 * 24;
 app.use(express.json());
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // https://tager-client.vercel.app
+  "http://localhost:3000",
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow SSR / Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.options("*", cors());
 const RedisStore = connectRedis(session);
 app.use(
   session({
@@ -34,7 +55,8 @@ app.use(
     cookie: {
       httpOnly: true,
       maxAge: sessionMaxAge,
-      sameSite: "lax",
+      sameSite: "none",
+      secure: true,
     },
   })
 );
