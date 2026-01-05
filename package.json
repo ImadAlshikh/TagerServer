@@ -12,7 +12,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "module": "CommonJS",
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
