@@ -60,6 +60,7 @@ export const sendMessageService = async (messageData: MessageType) => {
     select: {
       text: true,
       senderId: true,
+      chat: { select: { post: { select: { ownerId: true } }, userId: true } },
       created_at: true,
     },
   });

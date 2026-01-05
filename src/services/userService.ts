@@ -2,6 +2,8 @@ import { type UserType } from "../utils/validator";
 import { type Profile } from "passport-google-oauth20";
 import prisma from "../lib/prisma";
 import { mapPrismaError } from "../utils/PrismaErrorMapper";
+import axios from "axios";
+import cloudinary from "../lib/cloudinary";
 
 export const signinUserService = async (
   userData: Omit<UserType, "picture">
@@ -27,24 +29,85 @@ export const signinUserService = async (
 export const loginUserService = async (email: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { picture: { select: { secureUrl: true } } },
+    select: {
+      id: true,
+      name: true,
+      surname: true,
+      password: true,
+      picture: true,
+      posts: {
+        take: 2,
+        include: {
+          owner: {
+            select: {
+              name: true,
+              surname: true,
+              picture: true,
+            },
+          },
+        },
+        orderBy: { created_at: "desc" },
+      },
+      wallet: {
+        select: { freePoints: true, paidPoints: true },
+      },
+      phone: true,
+      address: true,
+      created_at: true,
+    },
   });
   return user;
 };
 
 export const upsertUserWithGoogleService = async (userData: Profile) => {
+  const user = await prisma.user.findUnique({
+    where: { email: userData._json.email },
+    select: { picture: true },
+  });
+
+  let picture: any;
+  if (userData._json.picture && !user?.picture?.secureUrl) {
+    const imageResponse = await axios.get(userData._json.picture, {
+      responseType: "arraybuffer",
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    const base64 = Buffer.from(imageResponse.data).toString("base64");
+    const dataUri = base64 && `data:image/jpeg;base64,${base64}`;
+    picture =
+      dataUri &&
+      (await cloudinary.uploader.upload(dataUri, {
+        folder: "users",
+        transformation: { width: 250, height: 250, format: "webp" },
+      }));
+  }
+
   const trans = await prisma.$transaction(async (tx) => {
     const user = await tx.user.upsert({
       where: { email: userData._json.email },
       update: {
         googleId: userData.id,
+        ...(picture && {
+          picture: {
+            create: {
+              secureUrl: picture.secure_url,
+              publicId: picture.public_id,
+            },
+          },
+        }),
       },
       create: {
         name: userData._json.given_name!,
         surname: userData._json.family_name,
         email: userData._json.email!,
-        picture: { create: { secureUrl: userData._json.picture! } },
         googleId: userData.id,
+        ...(picture && {
+          picture: {
+            create: {
+              secureUrl: picture.secure_url,
+              publicId: picture.public_id,
+            },
+          },
+        }),
       },
       include: { picture: { select: { secureUrl: true } } },
     });

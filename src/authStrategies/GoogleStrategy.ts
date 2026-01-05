@@ -1,17 +1,12 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import {
-  getUserByIdService,
-  upsertUserWithGoogleService,
-} from "../services/userService";
-import redis from "../lib/redis";
-import { ja } from "zod/v4/locales";
+import { upsertUserWithGoogleService } from "../services/userService";
 
 const googleStrategy: GoogleStrategy = new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google/callback`,
+    callbackURL: "http://localhost:3001/auth/google/callback",
     scope: ["profile", "email"],
   },
   async (accessToken, refreshToken, profile, done) => {

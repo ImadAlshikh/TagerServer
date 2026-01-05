@@ -30,9 +30,15 @@ export const sendMessageController = catchAsync(
       throw new AppError("Invalid message data", 400);
     }
     const result = await sendMessageService(messageDataValid.data);
-    console.log("msg:", result);
+    if (!result) throw new AppError("Message send failed", 400);
     io.to(messageData.chatId).emit("new-msg", result);
+    const reciverUser =
+      messageData.senderId == result.chat.post.ownerId
+        ? result.chat.userId
+        : result.chat.post.ownerId;
 
+    io.to(`user:${reciverUser}`).emit("notification", JSON.stringify(result));
+    // io.to(`user:${reciverUser}`).emit(JSON.stringify(result));
     return res.status(201).json({ success: true, data: result });
   }
 );
@@ -54,7 +60,6 @@ export const getChatByIdConroller = catchAsync(
 export const getChatsByUserController = catchAsync(
   async (req: Request, res: Response) => {
     const userId = (req.user as any).id || req.session.userId;
-    console.log(userId);
     const result = await getChatsByUserService(userId);
     return res.status(200).json({ success: true, data: result });
   }

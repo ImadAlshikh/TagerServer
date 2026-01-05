@@ -1,41 +1,29 @@
-import "./env";
+import "dotenv/config";
 import express from "express";
 import http from "http";
 import cors from "cors";
-import userRouter from "./routes/userRoutes.js";
-import postRouter from "./routes/postRoutes.js";
-import chatRouter from "./routes/chatRoutes.js";
-import ratingRouter from "./routes/ratingRoutes.js";
-import reportRouter from "./routes/reportRotues.js";
+import userRouter from "./routes/userRoutes";
+import postRouter from "./routes/postRoutes";
+import chatRouter from "./routes/chatRoutes";
+import ratingRouter from "./routes/ratingRoutes";
+import reportRouter from "./routes/reportRotues";
 import session from "express-session";
 import connectRedis from "connect-redis";
-import redis from "./lib/redis.js";
+import redis from "./lib/redis";
 import passport from "passport";
-import googleStrategy from "./authStrategies/GoogleStrategy.js";
-import { InitSocket } from "./lib/socket.js";
-import { attachUser } from "./middlewares/attachUser.js";
-import { errorHandler } from "./middlewares/errorHandler.js";
+import googleStrategy from "./authStrategies/GoogleStrategy";
+import { InitSocket } from "./lib/socket";
+import { attachUser } from "./middlewares/attachUser";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 const server = http.createServer(app);
 export const io = InitSocket(server);
-console.log(
-  "env:",
-  process.env.NODE_ENV,
-  "frontEnd:",
-  process.env.FRONTEND_URL
-);
+
 const port = Number(process.env.PORT);
 const sessionMaxAge: number = 1000 * 60 * 60 * 24;
 app.use(express.json());
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 const RedisStore = connectRedis(session);
 app.use(
   session({
@@ -46,8 +34,7 @@ app.use(
     cookie: {
       httpOnly: true,
       maxAge: sessionMaxAge,
-      sameSite: "none",
-      secure: true,
+      sameSite: "lax",
     },
   })
 );
@@ -61,7 +48,7 @@ app.get("/auth/google", passport.authenticate("google"));
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: process.env.FRONTEND_URL,
+    successRedirect: "http://localhost:3000",
     failureRedirect: "/login",
   }),
   (req, res) => {

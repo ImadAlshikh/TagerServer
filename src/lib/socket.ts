@@ -3,11 +3,10 @@ import prisma from "./prisma";
 
 export let io: Server;
 export function InitSocket(server: any) {
-  io = new Server(server, {
-    cors: { origin: process.env.FRONTEND_URL, credentials: true },
-  });
+  io = new Server(server, { cors: { origin: "*" } });
   io.on("connection", (socket) => {
     socket.on("join-chat", async ({ chatId, userId }) => {
+      console.log("joined:");
       socket.join(chatId);
       await prisma.message.updateMany({
         where: { chatId, NOT: { senderId: userId }, isRead: false },
@@ -17,6 +16,9 @@ export function InitSocket(server: any) {
     socket.on("leave-chat", (chatId) => {
       socket.leave(chatId);
     });
+    socket.on("subscribe-notification", (userId) =>
+      {socket.join(`user:${userId}`)}
+    );
   });
   return io;
 }
