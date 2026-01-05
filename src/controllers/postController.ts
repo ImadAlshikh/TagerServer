@@ -37,12 +37,7 @@ export const createPostController = catchAsync(
           const uploadStream = cloudinary.uploader.upload_stream(
             {
               folder: "posts",
-              transformation: {
-                width: 400,
-                height: 400,
-                crop: "fill",
-                format: "webp",
-              },
+              transformation: { width: 400, height: 400, crop: "fill" },
             },
             (error, result) => {
               if (error || !result) return reject(error);
@@ -96,10 +91,8 @@ export const getPostByIdController = catchAsync(
 
 export const getPostsByUserIdController = catchAsync(
   async (req: Request, res: Response) => {
-    const userId = req.params.id;
-    if (!userId) throw new AppError("User id required", 400);
+    const userId = req.params.userId;
     const result = await getPostsByUserIdService(userId);
-    console.log(result.length);
     res.status(200).json({ success: true, data: result });
   }
 );
@@ -107,15 +100,12 @@ export const getPostsByUserIdController = catchAsync(
 export const editPostByIdController = catchAsync(
   async (req: Request, res: Response) => {
     const postData: PostType = req.body;
-    const userId = req.session.userId || (req.user as any)?.id;
+
     const validation = postSchema.safeParse(postData);
     if (!validation.success) {
       throw new AppError("Invalid post data", 400);
     }
 
-    if (userId !== postData.ownerId) {
-      throw new AppError("Permission denied", 403);
-    }
     const result = await editPostByIdService(postData);
     res.status(200).json({ success: true, data: result });
   }

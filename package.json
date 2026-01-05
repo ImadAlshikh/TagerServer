@@ -16,7 +16,6 @@
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@prisma/config": "^7.0.0",
-    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.8.0",
     "connect-redis": "^6.1.3",

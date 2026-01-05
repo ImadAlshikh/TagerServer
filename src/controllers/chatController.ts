@@ -30,7 +30,7 @@ export const sendMessageController = catchAsync(
       throw new AppError("Invalid message data", 400);
     }
     const result = await sendMessageService(messageDataValid.data);
-    console.log(messageData);
+    console.log("msg:", result);
     io.to(messageData.chatId).emit("new-msg", result);
 
     return res.status(201).json({ success: true, data: result });
@@ -54,6 +54,7 @@ export const getChatByIdConroller = catchAsync(
 export const getChatsByUserController = catchAsync(
   async (req: Request, res: Response) => {
     const userId = (req.user as any).id || req.session.userId;
+    console.log(userId);
     const result = await getChatsByUserService(userId);
     return res.status(200).json({ success: true, data: result });
   }

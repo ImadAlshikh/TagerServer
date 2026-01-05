@@ -7,9 +7,7 @@ export function InitSocket(server: any) {
     cors: { origin: process.env.FRONTEND_URL, credentials: true },
   });
   io.on("connection", (socket) => {
-    console.log("connected");
     socket.on("join-chat", async ({ chatId, userId }) => {
-      console.log("joined:");
       socket.join(chatId);
       await prisma.message.updateMany({
         where: { chatId, NOT: { senderId: userId }, isRead: false },

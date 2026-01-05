@@ -21,7 +21,10 @@ enum PostStatus {
   REMOVED
 }
 
-
+enum SaleType {
+  ONETIME
+  MULTIPLE
+}
 
 model User {
   id             String    @id @default(cuid())
@@ -53,6 +56,7 @@ model Post {
   picture      Image?     @relation(fields: [pictureId], references: [id])
   price        Int //in cents
   discount     Int?
+  saleType     SaleType   @default(ONETIME)
   stock        Int?
   status       PostStatus @default(ACTIVE)
   tags         String[]

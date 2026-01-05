@@ -25,7 +25,6 @@ export const signinUserController = catchAsync(
     }
 
     const hashedPassword = await bcrypt.hash(validation.data.password!, 10);
-    if (!hashedPassword) throw new AppError("Invalid data", 400);
 
     const user = await signinUserService({
       ...validation.data,
@@ -141,10 +140,7 @@ export const updateProfileController = catchAsync(
         publicId: string;
       }>((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "users",
-            transformation: { width: 250, height: 250, format: "webp" },
-          },
+          { folder: "users" },
           (error, result) => {
             if (error || !result) return reject(error);
             resolve({

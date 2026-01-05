@@ -96,20 +96,8 @@ export const getPostByIdService = async (postId: string) => {
 };
 
 export const getPostsByUserIdService = async (userId: string) => {
-  console.log(userId);
   const posts = await prisma.post.findMany({
-    where: { ownerId: userId },
-    include: {
-      owner: {
-        select: {
-          name: true,
-          surname: true,
-          picture: true,
-        },
-      },
-      picture: { select: { secureUrl: true } },
-    },
-    orderBy: { created_at: "desc" },
+    where: { owner: { id: userId } },
   });
   return posts;
 };
