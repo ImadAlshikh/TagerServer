@@ -6,7 +6,7 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "target": "es2020",
+    "target": "es2022",
     "strict": true,
     "esModuleInterop": true
   },

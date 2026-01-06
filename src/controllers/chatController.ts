@@ -38,7 +38,6 @@ export const sendMessageController = catchAsync(
         : result.chat.post.ownerId;
 
     io.to(`user:${reciverUser}`).emit("notification", JSON.stringify(result));
-    // io.to(`user:${reciverUser}`).emit(JSON.stringify(result));
     return res.status(201).json({ success: true, data: result });
   }
 );
