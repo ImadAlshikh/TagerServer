@@ -63,8 +63,14 @@ export const sendMessageService = async (messageData: MessageType) => {
       chat: {
         select: {
           id: true,
-          post: { select: { id: true, ownerId: true } },
-          userId: true,
+          post: {
+            select: {
+              id: true,
+
+              owner: { select: { id: true, name: true, surname: true } },
+            },
+          },
+          user: { select: { id: true, name: true, surname: true } },
         },
       },
       created_at: true,
@@ -121,6 +127,7 @@ export const getChatsByUserService = async (userId: string) => {
         select: {
           title: true,
           picture: true,
+          ownerId: true,
           owner: {
             select: { id: true, name: true, surname: true, picture: true },
           },

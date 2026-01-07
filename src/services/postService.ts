@@ -140,6 +140,7 @@ export const searchPostService = async (searchQuery: string[]) => {
       },
       include: {
         owner: { select: { name: true, picture: true, surname: true } },
+        picture: { select: { secureUrl: true } },
       },
     });
     return posts;

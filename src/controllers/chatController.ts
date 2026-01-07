@@ -32,12 +32,19 @@ export const sendMessageController = catchAsync(
     const result = await sendMessageService(messageDataValid.data);
     if (!result) throw new AppError("Message send failed", 400);
     io.to(messageData.chatId).emit("new-msg", result);
-    const reciverUser =
-      messageData.senderId == result.chat.post.ownerId
-        ? result.chat.userId
-        : result.chat.post.ownerId;
+    const reciverUserId =
+      messageData.senderId == result.chat.post.owner.id
+        ? result.chat.user.id
+        : result.chat.post.owner.id;
 
-    io.to(`user:${reciverUser}`).emit("notification", JSON.stringify(result));
+    const senderUser =
+      messageData.senderId != result.chat.post.owner.id
+        ? result.chat.user
+        : result.chat.post.owner;
+    io.to(`user:${reciverUserId}`).emit(
+      "notification",
+      JSON.stringify({ ...result, senderUser })
+    );
     return res.status(201).json({ success: true, data: result });
   }
 );
@@ -47,7 +54,7 @@ export const getChatByIdConroller = catchAsync(
     const chatId = req.params.id;
     const result = await getChatByIdService(chatId);
     if (
-      (req.user as any)?.id !== result?.userId &&
+      (req.user as any)?.id !== result?.user.id &&
       (req.user as any)?.id !== result?.post.owner.id
     ) {
       throw new AppError("Access denied", 403);
