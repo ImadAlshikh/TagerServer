@@ -114,24 +114,74 @@ export const getPostsByUserIdController = catchAsync(
     const userId = req.params.id;
     if (!userId) throw new AppError("User id required", 400);
     const result = await getPostsByUserIdService(userId);
-    console.log(result.length);
     res.status(200).json({ success: true, data: result });
   }
 );
 
 export const editPostByIdController = catchAsync(
   async (req: Request, res: Response) => {
-    const postData: PostType = req.body;
+    const postData = {
+      ...req.body,
+      price: req.body.price ? Number(req.body.price) : undefined,
+      discount: req.body.discount ? Number(req.body.discount) : undefined,
+      tags: req.body.tags?.split(" ") || [],
+    };
+
     const userId = req.session.userId || (req.user as any)?.id;
-    const validation = postSchema.safeParse(postData);
+
+    if (!postData.id) {
+      throw new AppError("Post ID is required", 400);
+    }
+
+    // Verify ownership
+    const existingPost = await getPostByIdService(postData.id);
+    if (!existingPost) {
+      throw new AppError("Post not found", 404);
+    }
+
+    if (existingPost.ownerId !== userId) {
+      throw new AppError("Permission denied", 403);
+    }
+
+    const validation = postSchema.safeParse({
+      ...postData,
+      ownerId: userId, // Ensure validation passes with correct owner
+    });
+
     if (!validation.success) {
       throw new AppError("Invalid post data", 400);
     }
 
-    if (userId !== postData.ownerId) {
-      throw new AppError("Permission denied", 403);
+    let picture: { secure_url: string; public_id: string } | undefined;
+
+    if (req.file?.buffer) {
+      picture = await new Promise<{ secure_url: string; public_id: string }>(
+        (resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "posts",
+              transformation: {
+                width: 400,
+                height: 400,
+                crop: "fill",
+                format: "webp",
+              },
+            },
+            (error, result) => {
+              if (error || !result) return reject(error);
+              resolve(result);
+            }
+          );
+
+          streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
+        }
+      );
     }
-    const result = await editPostByIdService(postData);
+
+    const result = await editPostByIdService({
+      ...postData,
+      picture,
+    });
     res.status(200).json({ success: true, data: result });
   }
 );

@@ -170,7 +170,6 @@ export const getPostByIdService = async (postId: string) => {
 };
 
 export const getPostsByUserIdService = async (userId: string) => {
-  console.log(userId);
   const posts = await prisma.post.findMany({
     where: { ownerId: userId },
     include: {
@@ -189,10 +188,31 @@ export const getPostsByUserIdService = async (userId: string) => {
 };
 
 export const editPostByIdService = async (postData: PostType) => {
-  const { id: postId, ...restPostData } = postData;
+  const { id: postId, picture, ...restPostData } = postData;
+
+  const data: Prisma.PostUpdateInput = {
+    ...restPostData,
+    tags: restPostData.tags?.length ? restPostData.tags : [],
+  };
+
+  if (picture?.secure_url) {
+    data.picture = {
+      upsert: {
+        create: {
+          secureUrl: picture.secure_url,
+          publicId: picture.public_id,
+        },
+        update: {
+          secureUrl: picture.secure_url,
+          publicId: picture.public_id,
+        },
+      },
+    };
+  }
+
   const post = await prisma.post.update({
     where: { id: postId },
-    data: restPostData,
+    data,
   });
   return post;
 };
