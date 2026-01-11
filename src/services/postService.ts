@@ -1,5 +1,6 @@
 import { type PostType } from "../utils/validator";
 import prisma from "../lib/prisma";
+import { Prisma } from "../generated/prisma/client";
 import { AppError } from "../utils/AppError";
 
 export const createPostService = async (postData: PostType) => {
@@ -12,9 +13,15 @@ export const createPostService = async (postData: PostType) => {
       create: { user: { connect: { id: ownerId } } },
       update: {},
     });
-    if (wallet.freePoints < cost) {
+
+    const totalAvailable = wallet.freePoints + wallet.paidPoints;
+    if (totalAvailable < cost) {
       throw new AppError("Your wallet balance is insufficient", 402);
     }
+
+    const freePointsToUse = Math.min(wallet.freePoints, cost);
+    const paidPointsToUse = cost - freePointsToUse;
+
     const post = await tx.post.create({
       data: {
         ...restPostData,
@@ -39,12 +46,34 @@ export const createPostService = async (postData: PostType) => {
         },
       },
     });
+
+    // Deduct from wallet and create logs
     await tx.wallet.update({
       where: { id: wallet.id },
       data: {
-        freePoints: { decrement: 5 },
+        freePoints: { decrement: freePointsToUse },
+        paidPoints: { decrement: paidPointsToUse },
         logs: {
-          create: { amount: -5, pointSource: "FREE", reason: "POST_CREATE" },
+          create: [
+            ...(freePointsToUse > 0
+              ? [
+                  {
+                    amount: -freePointsToUse,
+                    pointSource: "FREE" as const,
+                    reason: "POST_CREATE" as const,
+                  },
+                ]
+              : []),
+            ...(paidPointsToUse > 0
+              ? [
+                  {
+                    amount: -paidPointsToUse,
+                    pointSource: "PAID" as const,
+                    reason: "POST_CREATE" as const,
+                  },
+                ]
+              : []),
+          ],
         },
       },
     });
@@ -52,6 +81,51 @@ export const createPostService = async (postData: PostType) => {
   });
 
   return trans.post;
+};
+
+export const getPostsService = async ({
+  cursor,
+  limit = 10,
+  searchQueries = [],
+}: {
+  cursor?: string;
+  limit?: number | string;
+  searchQueries?: string[];
+}) => {
+  const where: Prisma.PostWhereInput = {
+    ...(cursor ? { created_at: { lt: cursor } } : {}),
+    ...(searchQueries.length
+      ? {
+          OR: searchQueries.flatMap((q) => [
+            { title: { contains: q, mode: "insensitive" } },
+            { description: { contains: q, mode: "insensitive" } },
+            { categoryName: { contains: q, mode: "insensitive" } },
+            { tags: { hasSome: [q] } },
+          ]),
+        }
+      : {}),
+  };
+
+  const [postsCount, posts] = await prisma.$transaction([
+    prisma.post.count({ where }),
+    prisma.post.findMany({
+      where,
+      ...(limit != -1 ? { take: Number(limit) } : {}),
+      orderBy: { created_at: "desc" },
+      include: {
+        picture: { select: { secureUrl: true } },
+        owner: {
+          select: {
+            name: true,
+            surname: true,
+            picture: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  return { posts, postsCount };
 };
 
 export const getAllPostsService = async (

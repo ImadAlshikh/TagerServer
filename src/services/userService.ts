@@ -5,7 +5,7 @@ import { mapPrismaError } from "../utils/PrismaErrorMapper";
 import axios from "axios";
 import cloudinary from "../lib/cloudinary";
 
-export const signinUserService = async (
+export const signupUserService = async (
   userData: Omit<UserType, "picture">
 ) => {
   try {
@@ -26,7 +26,7 @@ export const signinUserService = async (
   }
 };
 
-export const loginUserService = async (email: string) => {
+export const signinUserService = async (email: string) => {
   const user = await prisma.user.findUnique({
     where: { email },
     select: {

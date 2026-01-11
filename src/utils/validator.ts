@@ -67,3 +67,9 @@ export enum Provider {
   Google = "google",
   Local = "local",
 }
+
+/** Load Credits */
+export const loadCreditsSchema = z.object({
+  credits: z.number().int().positive(),
+});
+export type LoadCreditsType = z.infer<typeof loadCreditsSchema>;

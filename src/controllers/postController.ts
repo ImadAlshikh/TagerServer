@@ -6,6 +6,7 @@ import {
   getPostsByUserIdService,
   editPostByIdService,
   searchPostService,
+  getPostsService,
 } from "../services/postService";
 
 import { postSchema, PostType } from "../utils/validator";
@@ -70,16 +71,30 @@ export const createPostController = catchAsync(
 
 export const getAllPostsController = catchAsync(
   async (req: Request, res: Response) => {
-    try {
-      let { cursor, limit } = req.query as {
-        cursor?: string;
-        limit?: string;
-      };
-      limit === "undefined" ? (limit = undefined) : limit;
-      cursor === "undefined" ? (cursor = undefined) : cursor;
-      const result = await getAllPostsService({ cursor, limit });
-      res.status(200).json({ success: true, data: result });
-    } catch (error) {}
+    let { cursor, limit } = req.query as {
+      cursor?: string;
+      limit?: string;
+    };
+    limit === "undefined" ? (limit = undefined) : limit;
+    cursor === "undefined" ? (cursor = undefined) : cursor;
+    const result = await getAllPostsService({ cursor, limit });
+    res.status(200).json({ success: true, data: result });
+  }
+);
+
+export const getPostsController = catchAsync(
+  async (req: Request, res: Response) => {
+    let { cursor, limit, searchQuery } = req.query as {
+      cursor?: string;
+      limit?: string;
+      searchQuery?: string;
+    };
+    limit === "undefined" ? (limit = undefined) : limit;
+    cursor === "undefined" ? (cursor = undefined) : cursor;
+    searchQuery === "undefined" ? (searchQuery = undefined) : searchQuery;
+    const searchQueries = searchQuery?.split(" ");
+    const result = await getPostsService({ cursor, limit, searchQueries });
+    res.status(200).json({ success: true, data: result });
   }
 );
 

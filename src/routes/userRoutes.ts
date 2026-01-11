@@ -1,12 +1,12 @@
 import express, { Request, Response } from "express";
 import {
+  signupUserController,
   signinUserController,
   getAllUsersController,
   getUserByIdController,
   getProfileController,
-  loginUserController,
   updateProfileController,
-  logoutController
+  logoutController,
 } from "../controllers/userController";
 import { isAuth } from "../middlewares/authMiddleware";
 import multer from "multer";
@@ -14,8 +14,8 @@ import multer from "multer";
 const router = express.Router();
 const uploader = multer();
 
+router.post("/signup", signupUserController);
 router.post("/signin", signinUserController);
-router.post("/login", loginUserController);
 router.get("/", getAllUsersController);
 router.get("/profile", isAuth, getProfileController);
 router.put(

@@ -7,6 +7,7 @@ import {
   getPostsByUserIdController,
   editPostByIdController,
   searchPostController,
+  getPostsController,
 } from "../controllers/postController";
 import { isAuth } from "../middlewares/authMiddleware";
 import { checkPermissions } from "../middlewares/permissionsMiddleware";
@@ -15,7 +16,7 @@ const router = express.Router();
 const upload = multer();
 
 router.post("/", isAuth, upload.single("picture"), createPostController);
-router.get("/", getAllPostsController);
+router.get("/", getPostsController);
 router.put("/", isAuth, checkPermissions(["ADMIN"]), editPostByIdController);
 router.get("/search", searchPostController);
 router.get("/by-user/:id", getPostsByUserIdController);

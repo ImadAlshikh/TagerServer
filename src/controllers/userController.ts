@@ -4,8 +4,8 @@ import streamifier from "streamifier";
 
 import { userSchema } from "../utils/validator";
 import {
+  signupUserService,
   signinUserService,
-  loginUserService,
   getAllUsersService,
   getUserByIdService,
   getUserProfileService,
@@ -17,7 +17,7 @@ import cloudinary from "../lib/cloudinary";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 
-export const signinUserController = catchAsync(
+export const signupUserController = catchAsync(
   async (req: Request, res: Response) => {
     const validation = userSchema.safeParse(req.body);
     if (!validation.success) {
@@ -27,7 +27,7 @@ export const signinUserController = catchAsync(
     const hashedPassword = await bcrypt.hash(validation.data.password!, 10);
     if (!hashedPassword) throw new AppError("Invalid data", 400);
 
-    const user = await signinUserService({
+    const user = await signupUserService({
       ...validation.data,
       password: hashedPassword,
     });
@@ -47,7 +47,7 @@ export const signinUserController = catchAsync(
   }
 );
 
-export const loginUserController = catchAsync(
+export const signinUserController = catchAsync(
   async (req: Request, res: Response) => {
     const validation = userSchema
       .pick({ email: true, password: true })
@@ -59,7 +59,7 @@ export const loginUserController = catchAsync(
 
     const { email, password } = validation.data;
 
-    const user = await loginUserService(email);
+    const user = await signinUserService(email);
     if (!user?.password) {
       throw new AppError("Invalid email or password", 401);
     }
@@ -179,7 +179,7 @@ export const updateProfileController = catchAsync(
 
 export const logoutController = catchAsync(
   async (req: Request, res: Response) => {
-    req.session.destroy((err) => {
+    req.session.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ success: false });
       }
