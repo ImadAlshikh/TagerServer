@@ -84,16 +84,36 @@ export const getAllPostsController = catchAsync(
 
 export const getPostsController = catchAsync(
   async (req: Request, res: Response) => {
-    let { cursor, limit, searchQuery } = req.query as {
-      cursor?: string;
-      limit?: string;
-      searchQuery?: string;
-    };
+    let { cursor, limit, searchQuery, orderBy, orderDir, category } =
+      req.query as {
+        cursor?: string;
+        limit?: string;
+        searchQuery?: string;
+        orderBy?: string;
+        orderDir?: string;
+        category?: string;
+      };
     limit === "undefined" ? (limit = undefined) : limit;
     cursor === "undefined" ? (cursor = undefined) : cursor;
-    searchQuery === "undefined" ? (searchQuery = undefined) : searchQuery;
+    searchQuery === "undefined" || searchQuery === ""
+      ? (searchQuery = undefined)
+      : searchQuery;
+    orderBy === "undefined" || orderBy === "" ? (orderBy = undefined) : orderBy;
+    orderDir === "undefined" || orderDir === ""
+      ? (orderDir = undefined)
+      : orderDir;
+    category === "undefined" || category === ""
+      ? (category = undefined)
+      : category;
     const searchQueries = searchQuery?.split(" ");
-    const result = await getPostsService({ cursor, limit, searchQueries });
+    const result = await getPostsService({
+      cursor,
+      limit,
+      searchQueries,
+      orderBy,
+      orderDir,
+      category,
+    });
     res.status(200).json({ success: true, data: result });
   }
 );

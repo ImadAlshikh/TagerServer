@@ -87,10 +87,16 @@ export const getPostsService = async ({
   cursor,
   limit = 10,
   searchQueries = [],
+  orderBy = "created_at",
+  orderDir = "desc",
+  category,
 }: {
   cursor?: string;
   limit?: number | string;
   searchQueries?: string[];
+  orderBy?: string;
+  orderDir?: string;
+  category?: string;
 }) => {
   const where: Prisma.PostWhereInput = {
     ...(cursor ? { created_at: { lt: cursor } } : {}),
@@ -104,6 +110,7 @@ export const getPostsService = async ({
           ]),
         }
       : {}),
+    ...(category ? { categoryName: category } : {}),
   };
 
   const [postsCount, posts] = await prisma.$transaction([
@@ -111,7 +118,7 @@ export const getPostsService = async ({
     prisma.post.findMany({
       where,
       ...(limit != -1 ? { take: Number(limit) } : {}),
-      orderBy: { created_at: "desc" },
+      orderBy: { [orderBy]: orderDir },
       include: {
         picture: { select: { secureUrl: true } },
         owner: {
