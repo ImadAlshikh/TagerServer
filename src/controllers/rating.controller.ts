@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { ratingSchema, RatingType } from "../utils/validator";
-import { rateUserService } from "../services/ratingService";
+import { rateUserService } from "../services/rating.service";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 

@@ -1,12 +1,12 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { upsertUserWithGoogleService } from "../services/userService";
+import { upsertUserWithGoogleService } from "../services/user.service";
 
 const googleStrategy: GoogleStrategy = new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: "http://localhost:3001/auth/google/callback",
+    callbackURL: `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google/callback`,
     scope: ["profile", "email"],
   },
   async (accessToken, refreshToken, profile, done) => {
@@ -16,7 +16,7 @@ const googleStrategy: GoogleStrategy = new GoogleStrategy(
     } catch (err) {
       return done(err);
     }
-  }
+  },
 );
 passport.serializeUser((id, done) => {
   return done(null, id);

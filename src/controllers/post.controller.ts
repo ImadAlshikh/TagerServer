@@ -7,7 +7,7 @@ import {
   editPostByIdService,
   searchPostService,
   getPostsService,
-} from "../services/postService";
+} from "../services/post.service";
 
 import { postSchema, PostType } from "../utils/validator";
 import cloudinary from "../lib/cloudinary";

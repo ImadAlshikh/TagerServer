@@ -1,6 +1,6 @@
-import { isAuth } from "./../middlewares/authMiddleware";
+import { isAuth } from "../middlewares/auth.middleware";
 import express from "express";
-import { rateUserController } from "../controllers/ratingController";
+import { rateUserController } from "../controllers/rating.controller";
 
 const router = express.Router();
 

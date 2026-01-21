@@ -8,9 +8,9 @@ import {
   editPostByIdController,
   searchPostController,
   getPostsController,
-} from "../controllers/postController";
-import { isAuth } from "../middlewares/authMiddleware";
-import { checkPermissions } from "../middlewares/permissionsMiddleware";
+} from "../controllers/post.controller";
+import { isAuth } from "../middlewares/auth.middleware";
+import { checkPermissions } from "../middlewares/permissions.middleware";
 
 const router = express.Router();
 const upload = multer();

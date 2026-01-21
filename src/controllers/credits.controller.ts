@@ -1,8 +1,22 @@
 import { Request, Response } from "express";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
-import { loadCreditsService } from "../services/creditsService";
+import {
+  getPackagesService,
+  loadCreditsService,
+} from "../services/credits.service";
 import { loadCreditsSchema } from "../utils/validator";
+
+export const getPackagesController = catchAsync(
+  async (req: Request, res: Response) => {
+    const packages = await getPackagesService();
+
+    res.status(200).json({
+      success: true,
+      data: packages,
+    });
+  },
+);
 
 export const loadCreditsController = catchAsync(
   async (req: Request, res: Response) => {
@@ -26,5 +40,5 @@ export const loadCreditsController = catchAsync(
       data: wallet,
       message: `Successfully added ${credits} credits to your wallet`,
     });
-  }
+  },
 );

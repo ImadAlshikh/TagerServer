@@ -73,3 +73,16 @@ export const loadCreditsSchema = z.object({
   credits: z.number().int().positive(),
 });
 export type LoadCreditsType = z.infer<typeof loadCreditsSchema>;
+
+export const packageSchema = z.object({
+  id: z.cuid(),
+  name: z.string(),
+  description: z.string().optional().nullable(),
+  price: z.number().nonnegative(),
+  discount: z.number().min(0).max(100).nullable(),
+  stripePriceId: z.string().optional().nullable(),
+  popular: z.boolean(),
+  credits: z.number(),
+});
+
+export type PackageType = z.infer<typeof packageSchema>;

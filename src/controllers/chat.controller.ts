@@ -2,10 +2,10 @@ import {
   getChatByIdService,
   getChatsByUserService,
   startChatService,
-} from "./../services/chatService";
+} from "../services/chat.service";
 import { Request, Response } from "express";
 import { messageSchema, MessageType } from "../utils/validator";
-import { sendMessageService } from "../services/chatService";
+import { sendMessageService } from "../services/chat.service";
 import { io } from "..";
 import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";

@@ -6,7 +6,7 @@ import axios from "axios";
 import cloudinary from "../lib/cloudinary";
 
 export const signupUserService = async (
-  userData: Omit<UserType, "picture">
+  userData: Omit<UserType, "picture">,
 ) => {
   try {
     const trans = await prisma.$transaction(async (tx) => {
@@ -145,6 +145,7 @@ export const getUserProfileService = async (userId: string) => {
       id: true,
       name: true,
       surname: true,
+      email: true,
       picture: true,
       posts: {
         take: 2,

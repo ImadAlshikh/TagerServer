@@ -7,8 +7,8 @@ import {
   getProfileController,
   updateProfileController,
   logoutController,
-} from "../controllers/userController";
-import { isAuth } from "../middlewares/authMiddleware";
+} from "../controllers/user.controller";
+import { isAuth } from "../middlewares/auth.middleware";
 import multer from "multer";
 
 const router = express.Router();
@@ -22,7 +22,7 @@ router.put(
   "/profile",
   isAuth,
   uploader.single("picture"),
-  updateProfileController
+  updateProfileController,
 );
 router.get("/:id", getUserByIdController);
 router.delete("/logout", isAuth, logoutController);

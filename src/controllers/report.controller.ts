@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { reportUserService } from "../services/reportService";
+import { reportUserService } from "../services/report.service";
 import { catchAsync } from "../utils/catchAsync";
 
 export const reportUserController = catchAsync(

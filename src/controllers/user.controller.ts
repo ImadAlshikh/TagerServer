@@ -10,7 +10,7 @@ import {
   getUserByIdService,
   getUserProfileService,
   updateProfileService,
-} from "../services/userService";
+} from "../services/user.service";
 
 import redis from "../lib/redis";
 import cloudinary from "../lib/cloudinary";
@@ -40,11 +40,11 @@ export const signupUserController = catchAsync(
       `user:${user.id}`,
       JSON.stringify(rest),
       "EX",
-      Number(process.env.CACHE_TIME)
+      Number(process.env.CACHE_TIME),
     );
 
     res.status(201).json({ success: true, data: rest });
-  }
+  },
 );
 
 export const signinUserController = catchAsync(
@@ -77,18 +77,18 @@ export const signinUserController = catchAsync(
       `user:${user.id}`,
       JSON.stringify(rest),
       "EX",
-      Number(process.env.CACHE_TIME)
+      Number(process.env.CACHE_TIME),
     );
 
     res.status(200).json({ success: true, data: rest });
-  }
+  },
 );
 
 export const getAllUsersController = catchAsync(
   async (_req: Request, res: Response) => {
     const users = await getAllUsersService();
     res.status(200).json({ success: true, data: users });
-  }
+  },
 );
 
 export const getUserByIdController = catchAsync(
@@ -99,7 +99,7 @@ export const getUserByIdController = catchAsync(
     if (!user) throw new AppError("User not found", 404);
 
     res.status(200).json({ success: true, data: user });
-  }
+  },
 );
 
 export const getProfileController = catchAsync(
@@ -108,7 +108,7 @@ export const getProfileController = catchAsync(
 
     const user = await getUserProfileService(userId);
     res.status(200).json({ success: true, data: user });
-  }
+  },
 );
 
 export const updateProfileController = catchAsync(
@@ -151,7 +151,7 @@ export const updateProfileController = catchAsync(
               secureUrl: result.secure_url,
               publicId: result.public_id,
             });
-          }
+          },
         );
 
         streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
@@ -174,7 +174,7 @@ export const updateProfileController = catchAsync(
     });
 
     res.json({ success: true, data: user });
-  }
+  },
 );
 
 export const logoutController = catchAsync(
@@ -190,5 +190,5 @@ export const logoutController = catchAsync(
       });
       res.status(200).json({ success: true });
     });
-  }
+  },
 );

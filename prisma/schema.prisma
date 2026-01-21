@@ -21,8 +21,6 @@ enum PostStatus {
   REMOVED
 }
 
-
-
 model User {
   id             String    @id @default(cuid())
   googleId       String?   @unique
@@ -128,26 +126,28 @@ model Report {
 }
 
 model Wallet {
-  id         String      @id @default(cuid())
-  userId     String      @unique
-  user       User        @relation(fields: [userId], references: [id])
-  freePoints Int         @default(30)
-  paidPoints Int         @default(0)
-  logs       WalletLog[]
-  updatedAt  DateTime    @updatedAt
+  id         String       @id @default(cuid())
+  userId     String       @unique
+  user       User         @relation(fields: [userId], references: [id])
+  freePoints Int          @default(30)
+  paidPoints Int          @default(0)
+  logs       PaymentLog[]
+  updatedAt  DateTime     @updatedAt
 }
 
-model WalletLog {
-  id          String          @id @default(cuid())
-  wallet      Wallet          @relation(fields: [walletId], references: [id])
+model PaymentLog {
+  id          String        @id @default(cuid())
+  wallet      Wallet        @relation(fields: [walletId], references: [id])
   walletId    String
+  packageId   String
+  package     Package       @relation(fields: [packageId], references: [id])
   amount      Int
   pointSource PointSource
-  reason      WalletLogReason
-  created_at  DateTime        @default(now())
+  reason      PaymentReason
+  created_at  DateTime      @default(now())
 }
 
-enum WalletLogReason {
+enum PaymentReason {
   MONTHLY_RESET
   TOP_UP
   POST_CREATE
@@ -157,4 +157,18 @@ enum WalletLogReason {
 enum PointSource {
   FREE
   PAID
+}
+
+model Package {
+  id            String       @id @default(cuid())
+  name          String
+  description   String?
+  stripePriceId String?
+  price         Float
+  discount      Int?
+  credits       Int
+  currency      String       @default("USD")
+  active        Boolean      @default(true)
+  popular       Boolean      @default(false)
+  paymentLogs   PaymentLog[]
 }

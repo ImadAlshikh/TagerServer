@@ -1,9 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { UserType } from "../utils/validator";
-import { userSchema } from "../utils/validator";
-import { getUserByIdService } from "../services/userService";
-import prisma from "../lib/prisma";
+import { getUserByIdService } from "../services/user.service.js";
+import prisma from "../lib/prisma.js";
 import bcrypt from "bcrypt";
 import redis from "../lib/redis";
 
@@ -23,7 +21,7 @@ const localStrategy: LocalStrategy = new LocalStrategy(
     } catch (error) {
       return done(error);
     }
-  }
+  },
 );
 
 passport.serializeUser((userId, done) => {
@@ -38,7 +36,7 @@ passport.deserializeUser(async (userId: string, done) => {
     `user:${userId}`,
     JSON.stringify(user),
     "EX",
-    process.env.CACHE_TIME!
+    process.env.CACHE_TIME!,
   );
   done(null, user);
 });
