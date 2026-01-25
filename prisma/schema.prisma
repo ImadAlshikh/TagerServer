@@ -139,8 +139,6 @@ model PaymentLog {
   id          String        @id @default(cuid())
   wallet      Wallet        @relation(fields: [walletId], references: [id])
   walletId    String
-  packageId   String
-  package     Package       @relation(fields: [packageId], references: [id])
   amount      Int
   pointSource PointSource
   reason      PaymentReason
@@ -160,15 +158,22 @@ enum PointSource {
 }
 
 model Package {
-  id            String       @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
   description   String?
   stripePriceId String?
-  price         Float
-  discount      Int?
   credits       Int
-  currency      String       @default("USD")
-  active        Boolean      @default(true)
-  popular       Boolean      @default(false)
-  paymentLogs   PaymentLog[]
+  active        Boolean @default(true)
+  popular       Boolean @default(false)
+}
+
+model Price {
+  id      String @id @default(cuid())
+  key     String @unique
+  credits Int
+}
+
+enum PriceKey {
+  POST_CREATE
+  POST_PROMOTE
 }

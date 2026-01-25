@@ -196,9 +196,15 @@ export const updateProfileService = async ({
       ...(picture?.secureUrl
         ? {
             picture: {
-              create: {
-                secureUrl: picture.secureUrl,
-                publicId: picture.publicId,
+              upsert: {
+                create: {
+                  secureUrl: picture.secureUrl,
+                  publicId: picture.publicId,
+                },
+                update: {
+                  secureUrl: picture.secureUrl,
+                  publicId: picture.publicId,
+                },
               },
             },
           }

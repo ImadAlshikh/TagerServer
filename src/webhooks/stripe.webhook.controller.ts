@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { stripe } from "../lib/stripe";
 import { AppError } from "../utils/AppError";
 import prisma from "../lib/prisma";
+import { io } from "..";
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const sig = req.headers["stripe-signature"] as string;
@@ -42,8 +43,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await tx.paymentLog.create({
             data: {
               walletId: userWallet.id,
-              amount: amount!,
-              packageId: packageId,
+              amount: packageCredits!,
               pointSource: "PAID",
               reason: "TOP_UP",
             },

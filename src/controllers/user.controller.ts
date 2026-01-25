@@ -136,6 +136,15 @@ export const updateProfileController = catchAsync(
     if (req.file?.buffer) {
       const oldUser = await getUserProfileService(id);
 
+      // Delete old image from Cloudinary before uploading new one
+      if (oldUser?.picture?.publicId) {
+        try {
+          await cloudinary.uploader.destroy(oldUser.picture.publicId);
+        } catch (error) {
+          console.error("Failed to delete old image from Cloudinary:", error);
+        }
+      }
+
       const uploadResult = await new Promise<{
         secureUrl: string;
         publicId: string;
@@ -158,10 +167,6 @@ export const updateProfileController = catchAsync(
       });
 
       picture = uploadResult;
-
-      if (oldUser?.picture?.publicId) {
-        await cloudinary.uploader.destroy(oldUser.picture.publicId);
-      }
     }
 
     const user = await updateProfileService({

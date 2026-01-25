@@ -7,6 +7,7 @@ import {
   editPostByIdService,
   searchPostService,
   getPostsService,
+  deletePostByIdService,
 } from "../services/post.service";
 
 import { postSchema, PostType } from "../utils/validator";
@@ -30,11 +31,16 @@ export const createPostController = catchAsync(
       throw new AppError("Invalid post data", 400);
     }
 
-    let picture: { secure_url: string; public_id: string } | undefined;
+    let result = await createPostService({
+      ...postData,
+    });
 
     if (req.file?.buffer) {
-      picture = await new Promise<{ secure_url: string; public_id: string }>(
-        (resolve, reject) => {
+      try {
+        const picture = await new Promise<{
+          secure_url: string;
+          public_id: string;
+        }>((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             {
               folder: "posts",
@@ -48,25 +54,26 @@ export const createPostController = catchAsync(
             (error, result) => {
               if (error || !result) return reject(error);
               resolve(result);
-            }
+            },
           );
 
           streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
-        }
-      );
-    }
+        });
 
-    const result = await createPostService({
-      ...postData,
-      picture,
-    });
+        result = await editPostByIdService({
+          ...postData,
+          id: result.id,
+          picture,
+        });
+      } catch (error) {}
+    }
 
     res.status(201).json({
       success: true,
       data: result,
       message: "Post created successfully",
     });
-  }
+  },
 );
 
 export const getAllPostsController = catchAsync(
@@ -79,7 +86,7 @@ export const getAllPostsController = catchAsync(
     cursor === "undefined" ? (cursor = undefined) : cursor;
     const result = await getAllPostsService({ cursor, limit });
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const getPostsController = catchAsync(
@@ -115,7 +122,7 @@ export const getPostsController = catchAsync(
       category,
     });
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const getPostByIdController = catchAsync(
@@ -126,7 +133,7 @@ export const getPostByIdController = catchAsync(
     if (!result) throw new AppError("Post not found", 404);
 
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const getPostsByUserIdController = catchAsync(
@@ -135,7 +142,7 @@ export const getPostsByUserIdController = catchAsync(
     if (!userId) throw new AppError("User id required", 400);
     const result = await getPostsByUserIdService(userId);
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const editPostByIdController = catchAsync(
@@ -175,6 +182,15 @@ export const editPostByIdController = catchAsync(
     let picture: { secure_url: string; public_id: string } | undefined;
 
     if (req.file?.buffer) {
+      // Delete old image from Cloudinary if it exists
+      if (existingPost.picture?.publicId) {
+        try {
+          await cloudinary.uploader.destroy(existingPost.picture.publicId);
+        } catch (error) {
+          console.error("Failed to delete old image from Cloudinary:", error);
+        }
+      }
+
       picture = await new Promise<{ secure_url: string; public_id: string }>(
         (resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
@@ -190,11 +206,11 @@ export const editPostByIdController = catchAsync(
             (error, result) => {
               if (error || !result) return reject(error);
               resolve(result);
-            }
+            },
           );
 
           streamifier.createReadStream(req.file?.buffer!).pipe(uploadStream);
-        }
+        },
       );
     }
 
@@ -203,7 +219,7 @@ export const editPostByIdController = catchAsync(
       picture,
     });
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const searchPostController = catchAsync(
@@ -213,5 +229,92 @@ export const searchPostController = catchAsync(
     if (!query) throw new AppError("Query is required", 400);
     const result = await searchPostService(query.toString().split(","));
     res.status(200).json({ success: true, data: result });
-  }
+  },
+);
+
+export const deletePostByIdController = catchAsync(
+  async (req: Request, res: Response) => {
+    const postId = req.params.id;
+    const userId = req.session.userId || (req.user as any)?.id;
+
+    if (!postId) {
+      throw new AppError("Post ID is required", 400);
+    }
+
+    // Verify ownership
+    const existingPost = await getPostByIdService(postId);
+    if (!existingPost) {
+      throw new AppError("Post not found", 404);
+    }
+
+    if (existingPost.ownerId !== userId) {
+      throw new AppError("Permission denied", 403);
+    }
+
+    // Delete image from Cloudinary if it exists
+    if (existingPost.picture?.publicId) {
+      try {
+        await cloudinary.uploader.destroy(existingPost.picture.publicId);
+      } catch (error) {
+        console.error("Failed to delete image from Cloudinary:", error);
+      }
+    }
+
+    // Delete post from database
+    await deletePostByIdService(postId);
+
+    res.status(200).json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+  },
+);
+
+export const deletePostImageByIdController = catchAsync(
+  async (req: Request, res: Response) => {
+    const postId = req.params.id;
+    const userId = req.session.userId || (req.user as any)?.id;
+
+    if (!postId) {
+      throw new AppError("Post ID is required", 400);
+    }
+
+    // Verify ownership
+    const existingPost = await getPostByIdService(postId);
+    if (!existingPost) {
+      throw new AppError("Post not found", 404);
+    }
+
+    if (existingPost.ownerId !== userId) {
+      throw new AppError("Permission denied", 403);
+    }
+
+    if (!existingPost.picture?.publicId) {
+      throw new AppError("Post has no image to delete", 404);
+    }
+
+    // Delete image from Cloudinary
+    try {
+      await cloudinary.uploader.destroy(existingPost.picture.publicId);
+    } catch (error) {
+      console.error("Failed to delete image from Cloudinary:", error);
+      throw new AppError("Failed to delete image", 500);
+    }
+
+    // Remove picture relation from post using Prisma directly
+    const prisma = (await import("../lib/prisma")).default;
+    await prisma.post.update({
+      where: { id: postId },
+      data: {
+        picture: {
+          disconnect: true,
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Post image deleted successfully",
+    });
+  },
 );

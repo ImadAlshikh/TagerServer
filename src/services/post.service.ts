@@ -7,7 +7,12 @@ export const createPostService = async (postData: PostType) => {
   const { ownerId, categoryName, picture, ...restPostData } = postData;
 
   const trans = await prisma.$transaction(async (tx) => {
-    const cost = Number(process.env.POST_CREATE_COST) || 5;
+    const cost = (await prisma.price.findUnique({
+      where: { key: "POST_CREATE" },
+    }))!.credits;
+    if (!cost) {
+      throw new AppError("Internal server error", 500);
+    }
     const wallet = await tx.wallet.upsert({
       where: { userId: ownerId },
       create: { user: { connect: { id: ownerId } } },
@@ -142,7 +147,7 @@ export const getAllPostsService = async (
   }: {
     cursor?: string;
     limit?: number | string;
-  } = { limit: 10 }
+  } = { limit: 10 },
 ) => {
   const postsCount = await prisma.post.count();
   const posts = await prisma.post.findMany({
@@ -195,11 +200,19 @@ export const getPostsByUserIdService = async (userId: string) => {
 };
 
 export const editPostByIdService = async (postData: PostType) => {
-  const { id: postId, picture, ...restPostData } = postData;
+  const { id: postId, picture, categoryName, ...restPostData } = postData;
 
   const data: Prisma.PostUpdateInput = {
     ...restPostData,
     tags: restPostData.tags?.length ? restPostData.tags : [],
+    ...(categoryName && {
+      category: {
+        connectOrCreate: {
+          where: { name: categoryName.toLowerCase() },
+          create: { name: categoryName },
+        },
+      },
+    }),
   };
 
   if (picture?.secure_url) {
@@ -246,4 +259,14 @@ export const searchPostService = async (searchQuery: string[]) => {
     });
     return posts;
   } catch (error) {}
+};
+
+export const deletePostByIdService = async (postId: string) => {
+  const post = await prisma.post.delete({
+    where: { id: postId },
+    include: {
+      picture: { select: { publicId: true } },
+    },
+  });
+  return post;
 };

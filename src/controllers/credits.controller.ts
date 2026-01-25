@@ -3,9 +3,16 @@ import { catchAsync } from "../utils/catchAsync";
 import { AppError } from "../utils/AppError";
 import {
   getPackagesService,
-  loadCreditsService,
+  getPaymentHistoryService,
+  getPricesService,
 } from "../services/credits.service";
-import { loadCreditsSchema } from "../utils/validator";
+
+export const getPricesController = catchAsync(
+  async (req: Request, res: Response) => {
+    const prices = await getPricesService();
+    res.status(200).json({ success: true, data: prices });
+  },
+);
 
 export const getPackagesController = catchAsync(
   async (req: Request, res: Response) => {
@@ -18,7 +25,7 @@ export const getPackagesController = catchAsync(
   },
 );
 
-export const loadCreditsController = catchAsync(
+export const getPaymentHistoryController = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.session.userId || (req.user as any)?.id;
 
@@ -26,19 +33,11 @@ export const loadCreditsController = catchAsync(
       throw new AppError("Unauthorized", 401);
     }
 
-    const validation = loadCreditsSchema.safeParse(req.body);
-    if (!validation.success) {
-      throw new AppError("Invalid data: " + validation.error.message, 400);
-    }
-
-    const { credits } = validation.data;
-
-    const wallet = await loadCreditsService(userId, credits);
+    const history = await getPaymentHistoryService(userId);
 
     res.status(200).json({
       success: true,
-      data: wallet,
-      message: `Successfully added ${credits} credits to your wallet`,
+      data: history,
     });
   },
 );
