@@ -7,7 +7,9 @@ export const getPricesService = async () => {
 };
 
 export const getPackagesService = async () => {
-  const packages = await prisma.package.findMany();
+  const packages = await prisma.package.findMany({
+    orderBy: { credits: "asc" },
+  });
 
   const packagesWithPrices = await Promise.all(
     packages.map(async (pkg) => {
