@@ -6,7 +6,6 @@ import { io } from "..";
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const sig = req.headers["stripe-signature"] as string;
-  console.log("sig:", sig);
   let event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -14,14 +13,13 @@ export async function handleStripeWebhook(req: Request, res: Response) {
       sig,
       process.env.STRIPE_SIG!,
     );
-    console.log("event type:", event.type);
+
     switch (event.type) {
       case "checkout.session.completed":
         console.log("completed");
         const userId = event.data.object.metadata?.userId;
         const packageId = event.data.object.metadata?.packageId;
         const amount = event.data.object.amount_total;
-        console.log(userId, packageId);
         if (!userId || !packageId) {
           throw new AppError("Invalid required metadata", 400);
         }

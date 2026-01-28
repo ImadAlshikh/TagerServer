@@ -7,12 +7,25 @@ export const createPostService = async (postData: PostType) => {
   const { ownerId, categoryName, picture, ...restPostData } = postData;
 
   const trans = await prisma.$transaction(async (tx) => {
-    const cost = (await prisma.price.findUnique({
+    let promoteCost;
+
+    const createCost = (await prisma.price.findUnique({
       where: { key: "POST_CREATE" },
     }))!.credits;
-    if (!cost) {
+    if (!createCost) {
       throw new AppError("Internal server error", 500);
     }
+    let totalCost = createCost;
+    if (postData.promoted) {
+      promoteCost = (await prisma.price.findUnique({
+        where: { key: "POST_PROMOTE" },
+      }))!.credits;
+      if (!promoteCost) {
+        throw new AppError("Internal server error", 500);
+      }
+      totalCost += promoteCost;
+    }
+
     const wallet = await tx.wallet.upsert({
       where: { userId: ownerId },
       create: { user: { connect: { id: ownerId } } },
@@ -20,12 +33,12 @@ export const createPostService = async (postData: PostType) => {
     });
 
     const totalAvailable = wallet.freePoints + wallet.paidPoints;
-    if (totalAvailable < cost) {
+    if (totalAvailable < totalCost) {
       throw new AppError("Your wallet balance is insufficient", 402);
     }
 
-    const freePointsToUse = Math.min(wallet.freePoints, cost);
-    const paidPointsToUse = cost - freePointsToUse;
+    const freePointsToUse = Math.min(wallet.freePoints, totalCost);
+    const paidPointsToUse = totalCost - freePointsToUse;
 
     const post = await tx.post.create({
       data: {
@@ -104,6 +117,7 @@ export const getPostsService = async ({
   category?: string;
 }) => {
   const where: Prisma.PostWhereInput = {
+    status: "ACTIVE",
     ...(cursor ? { created_at: { lt: cursor } } : {}),
     ...(searchQueries.length
       ? {
@@ -123,7 +137,7 @@ export const getPostsService = async ({
     prisma.post.findMany({
       where,
       ...(limit != -1 ? { take: Number(limit) } : {}),
-      orderBy: { [orderBy]: orderDir },
+      orderBy: [{ promoted: "desc" }, { [orderBy]: orderDir }],
       include: {
         picture: { select: { secureUrl: true } },
         owner: {
@@ -150,12 +164,19 @@ export const getAllPostsService = async (
   } = { limit: 10 },
 ) => {
   const postsCount = await prisma.post.count();
+  const where: Prisma.PostWhereInput = {
+    status: "ACTIVE",
+    ...(cursor && { created_at: { lt: cursor } }),
+  };
   const posts = await prisma.post.findMany({
-    ...(cursor ? { where: { created_at: { lt: cursor } } } : {}),
+    where: where,
     ...(limit ? (limit != -1 ? { take: Number(limit) } : {}) : {}),
-    orderBy: {
-      created_at: "desc",
-    },
+    orderBy: [
+      { promoted: "desc" },
+      {
+        created_at: "desc",
+      },
+    ],
     include: {
       picture: { select: { secureUrl: true } },
       owner: {

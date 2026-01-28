@@ -35,7 +35,7 @@ export const postSchema = z.object({
   price: z.number().nonnegative(),
   discount: z.number().max(100).nonnegative().optional(),
   categoryName: z.string().nonempty(),
-  saleType: z.enum(saleType).optional(),
+  promoted: z.boolean().optional(),
   tags: z.string().array().optional(),
   stock: z.number().optional(),
   status: z.enum(postStatus).optional(),

@@ -24,6 +24,7 @@ export const createPostController = catchAsync(
       discount: Number(req.body?.discount),
       ownerId: (req.user as any).id,
       tags: req.body.tags?.split(" ") || [],
+      promoted: req.body.promoted == "true" ? true : false,
     };
 
     const validation = postSchema.safeParse(postData);
@@ -152,6 +153,7 @@ export const editPostByIdController = catchAsync(
       price: req.body.price ? Number(req.body.price) : undefined,
       discount: req.body.discount ? Number(req.body.discount) : undefined,
       tags: req.body.tags?.split(" ") || [],
+      promoted: req.body.promoted == "true" ? true : false,
     };
 
     const userId = req.session.userId || (req.user as any)?.id;
@@ -177,6 +179,71 @@ export const editPostByIdController = catchAsync(
 
     if (!validation.success) {
       throw new AppError("Invalid post data", 400);
+    }
+
+    // Check if post is being promoted and wasn't promoted before
+    const isBeingPromoted = postData.promoted && !existingPost.promoted;
+
+    if (isBeingPromoted) {
+      // Import prisma
+      const prisma = (await import("../lib/prisma")).default;
+
+      // Get promotion cost
+      const promoteCost = (
+        await prisma.price.findUnique({
+          where: { key: "POST_PROMOTE" },
+        })
+      )?.credits;
+
+      if (!promoteCost) {
+        throw new AppError("Internal server error", 500);
+      }
+
+      // Get or create user's wallet
+      const wallet = await prisma.wallet.upsert({
+        where: { userId: userId },
+        create: { user: { connect: { id: userId } } },
+        update: {},
+      });
+
+      const totalAvailable = wallet.freePoints + wallet.paidPoints;
+      if (totalAvailable < promoteCost) {
+        throw new AppError("Your wallet balance is insufficient", 402);
+      }
+
+      // Deduct credits from wallet
+      const freePointsToUse = Math.min(wallet.freePoints, promoteCost);
+      const paidPointsToUse = promoteCost - freePointsToUse;
+
+      await prisma.wallet.update({
+        where: { id: wallet.id },
+        data: {
+          freePoints: { decrement: freePointsToUse },
+          paidPoints: { decrement: paidPointsToUse },
+          logs: {
+            create: [
+              ...(freePointsToUse > 0
+                ? [
+                    {
+                      amount: -freePointsToUse,
+                      pointSource: "FREE" as const,
+                      reason: "POST_PROMOTE" as const,
+                    },
+                  ]
+                : []),
+              ...(paidPointsToUse > 0
+                ? [
+                    {
+                      amount: -paidPointsToUse,
+                      pointSource: "PAID" as const,
+                      reason: "POST_PROMOTE" as const,
+                    },
+                  ]
+                : []),
+            ],
+          },
+        },
+      });
     }
 
     let picture: { secure_url: string; public_id: string } | undefined;

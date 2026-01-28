@@ -53,6 +53,7 @@ model Post {
   discount     Int?
   stock        Int?
   status       PostStatus @default(ACTIVE)
+  promoted     Boolean    @default(false)
   tags         String[]
   country      String?
   address      String?
