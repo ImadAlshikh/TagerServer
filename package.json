@@ -36,9 +36,7 @@
     "socket.io": "^4.8.1",
     "streamifier": "^0.1.1",
     "stripe": "^20.2.0",
-    "zod": "^4.1.12"
-  },
-  "devDependencies": {
+    "zod": "^4.1.12",
     "@types/bcrypt": "^6.0.0",
     "@types/connect-redis": "^0.0.23",
     "@types/cookie-parser": "^1.4.10",
