@@ -9,7 +9,7 @@ export const signupUserService = async (
   userData: Omit<UserType, "picture">,
 ) => {
   try {
-    const trans = await prisma.$transaction(async (tx) => {
+    const trans = await prisma.$transaction(async (tx:any) => {
       const user = await prisma.user.create({
         data: { ...userData, name: userData.name!.trim() },
       });
@@ -81,7 +81,7 @@ export const upsertUserWithGoogleService = async (userData: Profile) => {
       }));
   }
 
-  const trans = await prisma.$transaction(async (tx) => {
+  const trans = await prisma.$transaction(async (tx:any) => {
     const user = await tx.user.upsert({
       where: { email: userData._json.email },
       update: {
