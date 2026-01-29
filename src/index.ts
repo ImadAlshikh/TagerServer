@@ -18,6 +18,7 @@ import { InitSocket } from "./lib/socket";
 import { attachUser } from "./middlewares/attachUser.middleware";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { handleStripeWebhook } from "./webhooks/stripe.webhook.controller";
+import { Request, Response, NextFunction } from "express";
 
 const app = express();
 const server = http.createServer(app);
@@ -46,21 +47,24 @@ app.use(attachUser);
 passport.use(googleStrategy);
 app.get("/auth/google", passport.authenticate("google"));
 
-app.get("/auth/google/callback", (req, res, next) => {
-  passport.authenticate("google", (err: any, user: any) => {
-    if (err || !user) {
-      return res.redirect("/signin");
-    }
+app.get(
+  "/auth/google/callback",
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("google", (err: any, user: any) => {
+      if (err || !user) {
+        return res.redirect("/signin");
+      }
 
-    req.logIn(user, (err) => {
-      if (err) return next(err);
+      req.logIn(user, (err) => {
+        if (err) return next(err);
 
-      req.session.userId = user.id;
+        req.session.userId = user.id;
 
-      return res.redirect("http://localhost:3000");
-    });
-  })(req, res, next);
-});
+        return res.redirect("http://localhost:3000");
+      });
+    })(req, res, next);
+  },
+);
 
 app.use(
   "/checkout/stripe/webhook",
