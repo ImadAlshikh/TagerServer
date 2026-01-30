@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { getUserByIdService } from "../services/user.service.js";
-import prisma from "../lib/prisma.js";
+import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcrypt";
 import redis from "../lib/redis";
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { stripe } from "../lib/stripe";
 import { AppError } from "../utils/AppError";
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { io } from "..";
 
 export async function handleStripeWebhook(req: Request, res: Response) {

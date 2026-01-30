@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { createCheckoutSession } from "../services/stripe.service";
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { AppError } from "../utils/AppError";
 
 export async function createCheckout(req: Request, res: Response) {

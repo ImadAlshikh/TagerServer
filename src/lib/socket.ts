@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import prisma from "./prisma";
+import { prisma } from "./prisma";
 import { AppError } from "../utils/AppError";
 
 export let io: Server;

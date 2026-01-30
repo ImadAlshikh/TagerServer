@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { MessageType } from "../utils/validator";
 import { AppError } from "../utils/AppError";
 
@@ -155,8 +155,8 @@ export const getChatsByUserService = async (userId: string) => {
           text: true,
         },
         orderBy: { created_at: "desc" },
-      })
-    )
+      }),
+    ),
   );
 
   const result = chats.map((chat, i) => ({

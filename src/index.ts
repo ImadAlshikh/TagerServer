@@ -23,7 +23,7 @@ const app = express();
 const server = http.createServer(app);
 const port = Number(process.env.PORT);
 const sessionMaxAge: number = 1000 * 60 * 60 * 24;
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: process.env.FRONTEND_URL!, credentials: true }));
 
 const RedisStore = connectRedis(session);
 const sessionMiddleware = session({
@@ -57,7 +57,7 @@ app.get("/auth/google/callback", (req, res, next) => {
 
       req.session.userId = user.id;
 
-      return res.redirect("http://localhost:3000");
+      return res.redirect(process.env.FRONTEND_URL!);
     });
   })(req, res, next);
 });

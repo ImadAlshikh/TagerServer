@@ -1,4 +1,4 @@
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { stripe } from "../lib/stripe";
 
 export const getPricesService = async () => {

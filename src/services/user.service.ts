@@ -1,6 +1,6 @@
 import { type UserType } from "../utils/validator";
 import { type Profile } from "passport-google-oauth20";
-import prisma from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { mapPrismaError } from "../utils/PrismaErrorMapper";
 import axios from "axios";
 import cloudinary from "../lib/cloudinary";
