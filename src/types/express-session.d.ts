@@ -5,3 +5,5 @@ declare module "express-session" {
     userId?: string;
   }
 }
+
+declare module "express" {}
