@@ -186,7 +186,7 @@ export const editPostByIdController = catchAsync(
 
     if (isBeingPromoted) {
       // Import prisma
-      const prisma = (await import("../lib/prisma")).default;
+      const prisma = (await import("../lib/prisma")).prisma;
 
       // Get promotion cost
       const promoteCost = (
@@ -369,7 +369,7 @@ export const deletePostImageByIdController = catchAsync(
     }
 
     // Remove picture relation from post using Prisma directly
-    const prisma = (await import("../lib/prisma")).default;
+    const prisma = (await import("../lib/prisma")).prisma;
     await prisma.post.update({
       where: { id: postId },
       data: {
