@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import http from "http";
 import cors from "cors";
 import userRouter from "./routes/user.routes";
@@ -46,21 +46,24 @@ app.use(attachUser);
 passport.use(googleStrategy);
 app.get("/auth/google", passport.authenticate("google"));
 
-app.get("/auth/google/callback", (req, res, next) => {
-  passport.authenticate("google", (err: any, user: any) => {
-    if (err || !user) {
-      return res.redirect("/signin");
-    }
+app.get(
+  "/auth/google/callback",
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("google", (err: any, user: any) => {
+      if (err || !user) {
+        return res.redirect("/signin");
+      }
 
-    req.logIn(user, (err) => {
-      if (err) return next(err);
+      req.logIn(user, (err) => {
+        if (err) return next(err);
 
-      req.session.userId = user.id;
+        req.session.userId = user.id;
 
-      return res.redirect(process.env.FRONTEND_URL!);
-    });
-  })(req, res, next);
-});
+        return res.redirect(process.env.FRONTEND_URL!);
+      });
+    })(req, res, next);
+  },
+);
 
 app.use(
   "/checkout/stripe/webhook",
