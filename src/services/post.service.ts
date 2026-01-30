@@ -6,7 +6,7 @@ import { AppError } from "../utils/AppError";
 export const createPostService = async (postData: PostType) => {
   const { ownerId, categoryName, picture, ...restPostData } = postData;
 
-  const trans = await prisma.$transaction(async (tx:any) => {
+  const trans = await prisma.$transaction(async (tx) => {
     let promoteCost;
 
     const createCost = (await prisma.price.findUnique({

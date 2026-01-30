@@ -37,7 +37,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           })
         )?.credits;
 
-        const res = await prisma.$transaction(async (tx:any) => {
+        const res = await prisma.$transaction(async (tx) => {
           await tx.paymentLog.create({
             data: {
               walletId: userWallet.id,

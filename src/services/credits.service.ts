@@ -12,7 +12,7 @@ export const getPackagesService = async () => {
   });
 
   const packagesWithPrices = await Promise.all(
-    packages.map(async (pkg:any) => {
+    packages.map(async (pkg) => {
       const price = await stripe.prices.retrieve(pkg.stripePriceId!);
       return {
         ...pkg,
