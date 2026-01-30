@@ -20,7 +20,7 @@ dist/
 build/
 
 # Prisma generated files
-/src/generated/prisma/
+/src/generated/
 
 # Optional: IDE/editor settings
 .vscode/
