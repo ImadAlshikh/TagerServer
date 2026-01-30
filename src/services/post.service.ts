@@ -1,12 +1,12 @@
 import { type PostType } from "../utils/validator";
-import {prisma} from "../lib/prisma";
+import { prisma } from "../lib/prisma";
 import { Prisma } from "@prisma/client";
 import { AppError } from "../utils/AppError";
 
 export const createPostService = async (postData: PostType) => {
   const { ownerId, categoryName, picture, ...restPostData } = postData;
 
-  const trans = await prisma.$transaction(async (tx) => {
+  const trans = await prisma.$transaction(async (tx: any) => {
     let promoteCost;
 
     const createCost = (await prisma.price.findUnique({

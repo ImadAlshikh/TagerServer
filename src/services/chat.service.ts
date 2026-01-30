@@ -145,7 +145,7 @@ export const getChatsByUserService = async (userId: string) => {
   });
 
   const lastMessages = await Promise.all(
-    chats.map((chat) =>
+    chats.map((chat: any) =>
       prisma.message.findFirst({
         where: { chatId: chat.id },
         select: {
