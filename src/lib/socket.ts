@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import { prisma } from "./prisma";
-import { AppError } from "../utils/AppError";
+import { prisma } from "./prisma.js";
+import { AppError } from "../utils/AppError.js";
 
 export let io: Server;
 export function InitSocket(server: any, sessionMiddleware: any) {

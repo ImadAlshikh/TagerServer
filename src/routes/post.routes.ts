@@ -10,9 +10,9 @@ import {
   getPostsController,
   deletePostByIdController,
   deletePostImageByIdController,
-} from "../controllers/post.controller";
-import { isAuth } from "../middlewares/auth.middleware";
-import { checkPermissions } from "../middlewares/permissions.middleware";
+} from "../controllers/post.controller.js";
+import { isAuth } from "../middlewares/auth.middleware.js";
+import { checkPermissions } from "../middlewares/permissions.middleware.js";
 
 const router = express.Router();
 const upload = multer();

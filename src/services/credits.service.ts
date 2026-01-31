@@ -1,5 +1,5 @@
-import { prisma } from "../lib/prisma";
-import { stripe } from "../lib/stripe";
+import { prisma } from "../lib/prisma.js";
+import { stripe } from "../lib/stripe.js";
 
 export const getPricesService = async () => {
   const prices = await prisma.price.findMany();

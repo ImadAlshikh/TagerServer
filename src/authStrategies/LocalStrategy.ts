@@ -3,7 +3,8 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { getUserByIdService } from "../services/user.service.js";
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcrypt";
-import redis from "../lib/redis";
+import redis from "../lib/redis.js";
+import env from "../lib/env.js";
 
 const localStrategy: LocalStrategy = new LocalStrategy(
   {
@@ -32,12 +33,7 @@ passport.deserializeUser(async (userId: string, done) => {
   const cached = await redis.get(`user:${userId}`);
   if (cached) return done(null, JSON.parse(cached));
   const user = await getUserByIdService(userId);
-  redis.set(
-    `user:${userId}`,
-    JSON.stringify(user),
-    "EX",
-    process.env.CACHE_TIME!,
-  );
+  redis.set(`user:${userId}`, JSON.stringify(user), "EX", env.redis.cacheTime);
   done(null, user);
 });
 

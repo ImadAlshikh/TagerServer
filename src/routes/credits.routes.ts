@@ -3,8 +3,8 @@ import {
   getPackagesController,
   getPaymentHistoryController,
   getPricesController,
-} from "../controllers/credits.controller";
-import { isAuth } from "../middlewares/auth.middleware";
+} from "../controllers/credits.controller.js";
+import { isAuth } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 router.get("/prices", getPricesController);

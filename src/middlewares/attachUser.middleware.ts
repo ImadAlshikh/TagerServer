@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import redis from "../lib/redis";
-import { getUserByIdService } from "../services/user.service";
-
+import redis from "../lib/redis.js";
+import { getUserByIdService } from "../services/user.service.js";
+import env from "../lib/env.js"
 export const attachUser = async (
   req: Request,
   res: Response,
@@ -20,7 +20,7 @@ export const attachUser = async (
       `user:${userId}`,
       JSON.stringify(user),
       "EX",
-      Number(process.env.CACHE_TIME!),
+      env.redis.cacheTime,
     );
     req.user = user;
   }

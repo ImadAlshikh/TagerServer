@@ -1,5 +1,5 @@
-import { stripe } from "../lib/stripe";
-import { PackageType } from "../utils/validator";
+import { stripe } from "../lib/stripe.js";
+import env from "../lib/env.js";
 export async function createCheckoutSession({
   user,
   pckg,
@@ -28,7 +28,7 @@ export async function createCheckoutSession({
         // },
       },
     ],
-    success_url: `${process.env.FRONT_URL}/profile`,
-    cancel_url: `${process.env.FRONT_URL}/pricing`,
+    success_url: `${env.frontend.url}/profile`,
+    cancel_url: `${env.frontend.url}/pricing`,
   });
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { createCheckoutSession } from "../services/stripe.service";
-import { prisma } from "../lib/prisma";
-import { AppError } from "../utils/AppError";
+import { createCheckoutSession } from "../services/stripe.service.js";
+import { prisma } from "../lib/prisma.js";
+import { AppError } from "../utils/AppError.js";
 
 export async function createCheckout(req: Request, res: Response) {
   const packageId = req.body.packageId;

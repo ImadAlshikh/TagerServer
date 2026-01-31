@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { reportUserService } from "../services/report.service";
-import { catchAsync } from "../utils/catchAsync";
+import { reportUserService } from "../services/report.service.js";
+import { catchAsync } from "../utils/catchAsync.js";
 
 export const reportUserController = catchAsync(
   async (req: Request, res: Response) => {
@@ -12,5 +12,5 @@ export const reportUserController = catchAsync(
       reporterId: userId,
     });
     res.status(201).json({ success: true, data: result });
-  }
+  },
 );

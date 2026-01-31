@@ -1,6 +1,6 @@
-import { isAuth } from "../middlewares/auth.middleware";
+import { isAuth } from "../middlewares/auth.middleware.js";
 import express from "express";
-import { rateUserController } from "../controllers/rating.controller";
+import { rateUserController } from "../controllers/rating.controller.js";
 
 const router = express.Router();
 

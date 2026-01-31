@@ -1,6 +1,6 @@
-import { prisma } from "../lib/prisma";
-import { MessageType } from "../utils/validator";
-import { AppError } from "../utils/AppError";
+import { prisma } from "../lib/prisma.js";
+import { MessageType } from "../utils/validator.js";
+import { AppError } from "../utils/AppError.js";
 
 export const startChatService = async ({
   userId,

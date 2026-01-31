@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { stripe } from "../lib/stripe";
-import { AppError } from "../utils/AppError";
-import { prisma } from "../lib/prisma";
-import { io } from "..";
+import { stripe } from "../lib/stripe.js";
+import { AppError } from "../utils/AppError.js";
+import { prisma } from "../lib/prisma.js";
+import env from "../lib/env.js";
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const sig = req.headers["stripe-signature"] as string;
@@ -11,7 +11,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     event = stripe.webhooks.constructEvent(
       req.body as Buffer,
       sig,
-      process.env.STRIPE_SIG!,
+      env.stripe.webhookSecret,
     );
 
     switch (event.type) {

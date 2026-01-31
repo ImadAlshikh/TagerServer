@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import streamifier from "streamifier";
-
-import { userSchema } from "../utils/validator";
+import env from "../lib/env.js"
+import { userSchema } from "../utils/validator.js";
 import {
   signupUserService,
   signinUserService,
@@ -10,12 +10,12 @@ import {
   getUserByIdService,
   getUserProfileService,
   updateProfileService,
-} from "../services/user.service";
+} from "../services/user.service.js";
 
-import redis from "../lib/redis";
-import cloudinary from "../lib/cloudinary";
-import { catchAsync } from "../utils/catchAsync";
-import { AppError } from "../utils/AppError";
+import redis from "../lib/redis.js";
+import cloudinary from "../lib/cloudinary.js";
+import { catchAsync } from "../utils/catchAsync.js";
+import { AppError } from "../utils/AppError.js";
 
 export const signupUserController = catchAsync(
   async (req: Request, res: Response) => {
@@ -40,7 +40,7 @@ export const signupUserController = catchAsync(
       `user:${user.id}`,
       JSON.stringify(rest),
       "EX",
-      Number(process.env.CACHE_TIME),
+      env.redis.cacheTime,
     );
 
     res.status(201).json({ success: true, data: rest });
@@ -77,7 +77,7 @@ export const signinUserController = catchAsync(
       `user:${user.id}`,
       JSON.stringify(rest),
       "EX",
-      Number(process.env.CACHE_TIME),
+      env.redis.cacheTime,
     );
 
     res.status(200).json({ success: true, data: rest });

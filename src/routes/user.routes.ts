@@ -7,8 +7,8 @@ import {
   getProfileController,
   updateProfileController,
   logoutController,
-} from "../controllers/user.controller";
-import { isAuth } from "../middlewares/auth.middleware";
+} from "../controllers/user.controller.js";
+import { isAuth } from "../middlewares/auth.middleware.js";
 import multer from "multer";
 
 const router = express.Router();

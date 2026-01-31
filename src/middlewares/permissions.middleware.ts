@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../lib/prisma";
-import { type userRoles } from "../utils/validator";
-import { AppError } from "../utils/AppError";
+import { prisma } from "../lib/prisma.js";
+import { type userRoles } from "../utils/validator.js";
+import { AppError } from "../utils/AppError.js";
 
 type Role = (typeof userRoles)[number];
 type RoleOrRoles = Role | Role[];

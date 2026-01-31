@@ -4,9 +4,9 @@ import {
   getChatsByUserController,
   sendMessageController,
   startChatController,
-} from "../controllers/chat.controller";
-import { isAuth } from "../middlewares/auth.middleware";
-import { checkPermissions } from "../middlewares/permissions.middleware";
+} from "../controllers/chat.controller.js";
+import { isAuth } from "../middlewares/auth.middleware.js";
+import { checkPermissions } from "../middlewares/permissions.middleware.js";
 
 const router = express.Router();
 

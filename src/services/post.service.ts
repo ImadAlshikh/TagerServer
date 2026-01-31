@@ -1,7 +1,7 @@
-import { type PostType } from "../utils/validator";
-import { prisma } from "../lib/prisma";
+import { type PostType } from "../utils/validator.js";
+import { prisma } from "../lib/prisma.js";
 import { Prisma } from "@prisma/client";
-import { AppError } from "../utils/AppError";
+import { AppError } from "../utils/AppError.js";
 
 export const createPostService = async (postData: PostType) => {
   const { ownerId, categoryName, picture, ...restPostData } = postData;

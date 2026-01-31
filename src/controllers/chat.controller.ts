@@ -2,13 +2,13 @@ import {
   getChatByIdService,
   getChatsByUserService,
   startChatService,
-} from "../services/chat.service";
+} from "../services/chat.service.js";
 import { Request, Response } from "express";
-import { messageSchema, MessageType } from "../utils/validator";
-import { sendMessageService } from "../services/chat.service";
-import { io } from "..";
-import { catchAsync } from "../utils/catchAsync";
-import { AppError } from "../utils/AppError";
+import { messageSchema, MessageType } from "../utils/validator.js";
+import { sendMessageService } from "../services/chat.service.js";
+import { io } from "../index.js";
+import { catchAsync } from "../utils/catchAsync.js";
+import { AppError } from "../utils/AppError.js";
 
 export const startChatController = catchAsync(
   async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ export const startChatController = catchAsync(
     const userId = (req.user as any)?.id;
     const result = await startChatService({ userId, postId });
     res.status(200).json({ success: true, data: result?.id });
-  }
+  },
 );
 
 export const sendMessageController = catchAsync(
@@ -43,10 +43,10 @@ export const sendMessageController = catchAsync(
         : result.chat.post.owner;
     io.to(`user:${reciverUserId}`).emit(
       "notification",
-      JSON.stringify({ ...result, senderUser })
+      JSON.stringify({ ...result, senderUser }),
     );
     return res.status(201).json({ success: true, data: result });
-  }
+  },
 );
 
 export const getChatByIdConroller = catchAsync(
@@ -60,7 +60,7 @@ export const getChatByIdConroller = catchAsync(
       throw new AppError("Access denied", 403);
     }
     res.status(200).json({ success: true, data: result });
-  }
+  },
 );
 
 export const getChatsByUserController = catchAsync(
@@ -68,5 +68,5 @@ export const getChatsByUserController = catchAsync(
     const userId = (req.user as any).id || req.session.userId;
     const result = await getChatsByUserService(userId);
     return res.status(200).json({ success: true, data: result });
-  }
+  },
 );

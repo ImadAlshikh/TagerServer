@@ -1,9 +1,9 @@
-import { type UserType } from "../utils/validator";
+import { type UserType } from "../utils/validator.js";
 import { type Profile } from "passport-google-oauth20";
-import { prisma } from "../lib/prisma";
-import { mapPrismaError } from "../utils/PrismaErrorMapper";
+import { prisma } from "../lib/prisma.js";
+import { mapPrismaError } from "../utils/PrismaErrorMapper.js";
 import axios from "axios";
-import cloudinary from "../lib/cloudinary";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signupUserService = async (
   userData: Omit<UserType, "picture">,

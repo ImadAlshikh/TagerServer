@@ -8,13 +8,13 @@ import {
   searchPostService,
   getPostsService,
   deletePostByIdService,
-} from "../services/post.service";
+} from "../services/post.service.js";
 
-import { postSchema, PostType } from "../utils/validator";
-import cloudinary from "../lib/cloudinary";
+import { postSchema, PostType } from "../utils/validator.js";
+import cloudinary from "../lib/cloudinary.js";
 import streamifier from "streamifier";
-import { catchAsync } from "../utils/catchAsync";
-import { AppError } from "../utils/AppError";
+import { catchAsync } from "../utils/catchAsync.js";
+import { AppError } from "../utils/AppError.js";
 
 export const createPostController = catchAsync(
   async (req: Request, res: Response) => {

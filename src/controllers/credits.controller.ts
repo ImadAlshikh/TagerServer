@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { catchAsync } from "../utils/catchAsync";
-import { AppError } from "../utils/AppError";
+import { catchAsync } from "../utils/catchAsync.js";
+import { AppError } from "../utils/AppError.js";
 import {
   getPackagesService,
   getPaymentHistoryService,
   getPricesService,
-} from "../services/credits.service";
+} from "../services/credits.service.js";
 
 export const getPricesController = catchAsync(
   async (req: Request, res: Response) => {
