@@ -23,7 +23,8 @@ const app = express();
 const server = http.createServer(app);
 const port = Number(process.env.PORT);
 const sessionMaxAge: number = 1000 * 60 * 60 * 24;
-app.use(cors({ origin: process.env.FRONTEND_URL!, credentials: true }));
+const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, "") || "";
+app.use(cors({ origin: frontendUrl, credentials: true }));
 
 const RedisStore = connectRedis(session);
 const sessionMiddleware = session({
