@@ -36,7 +36,7 @@ const sessionMiddleware = session({
     httpOnly: true,
     maxAge: sessionMaxAge,
     sameSite: env.env === "production" ? "none" : "lax",
-    secure: env.env === "production",
+    secure: false, //env.env === "production",
   },
 });
 
