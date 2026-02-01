@@ -26,6 +26,10 @@ const sessionMaxAge: number = 1000 * 60 * 60 * 24;
 const frontendUrl = env.frontend.url;
 app.use(cors({ origin: frontendUrl, credentials: true }));
 
+if (env.env === "production") {
+  app.set("trust proxy", 1); // trust first proxy
+}
+
 const RedisStore = connectRedis(session);
 const sessionMiddleware = session({
   store: new RedisStore({ client: redis }),
@@ -36,7 +40,7 @@ const sessionMiddleware = session({
     httpOnly: true,
     maxAge: sessionMaxAge,
     sameSite: env.env === "production" ? "none" : "lax",
-    secure: false, //env.env === "production",
+    secure: env.env === "production",
   },
 });
 
