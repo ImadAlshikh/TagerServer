@@ -72,11 +72,17 @@ app.get(
           return next(err);
         }
 
-        req.session.userId = user.id;
+        req.session.userId = user; // user is the id from GoogleStrategy
         console.log("Session UserID set:", req.session.userId);
-        console.log("Redirecting to frontend:", frontendUrl);
 
-        return res.redirect(frontendUrl);
+        req.session.save((err: any) => {
+          if (err) {
+            console.error("Session Save Error:", err);
+            return next(err);
+          }
+          console.log("Session saved, redirecting to frontend:", frontendUrl);
+          return res.redirect(frontendUrl);
+        });
       });
     })(req, res, next);
   },
