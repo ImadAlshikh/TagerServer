@@ -26,6 +26,15 @@ const sessionMaxAge: number = 1000 * 60 * 60 * 24;
 const frontendUrl = env.frontend.url;
 app.use(cors({ origin: frontendUrl, credentials: true }));
 
+app.use((req, res, next) => {
+  if (req.path === "/users/profile" || req.path === "/auth/google/callback") {
+    console.log(`Debug [${req.path}]: Cookies received:`, req.headers.cookie);
+    console.log(`Debug [${req.path}]: Session ID:`, req.sessionID);
+    console.log(`Debug [${req.path}]: Session:`, req.session);
+  }
+  next();
+});
+
 if (env.env === "production") {
   app.set("trust proxy", 1); // trust first proxy
 }
@@ -36,6 +45,7 @@ const sessionMiddleware = session({
   secret: env.auth.sessionSecret,
   resave: false,
   saveUninitialized: false,
+  proxy: true, // Required for Heroku/Vercel/Railway
   cookie: {
     httpOnly: true,
     maxAge: sessionMaxAge,
